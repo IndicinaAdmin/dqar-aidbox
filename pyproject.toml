@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "dqar-uc4"
+version = "0.1.0"
+requires-python = ">=3.11"
+
+[project.optional-dependencies]
+pipeline = [
+    "requests",
+    "boto3",
+    "python-dotenv",
+]
+web = [
+    "fastapi",
+    "uvicorn[standard]",
+    "boto3",
+    "jinja2",
+    "python-multipart",
+]
+lineage = [
+    "openlineage-python",
+]
+report = [
+    "anthropic",
+    "jinja2",
+    "weasyprint",
+]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "black",
+    "ruff",
+]

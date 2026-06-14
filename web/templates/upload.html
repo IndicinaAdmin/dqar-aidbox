@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DQAR Secure Extract Upload — {{ display_name }}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            indicina: { 600: '#1d4ed8', 700: '#1e40af', 50: '#eff6ff' }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-50 min-h-screen font-sans text-slate-800">
+
+  <!-- Header -->
+  <header class="bg-white border-b border-slate-200 px-6 py-4">
+    <div class="max-w-2xl mx-auto flex items-center justify-between">
+      <div>
+        <span class="text-sm font-semibold text-indicina-600 tracking-wide uppercase">Indicina</span>
+        <span class="text-sm text-slate-400 ml-2">Digital Quality Audit Readiness</span>
+      </div>
+      <span class="text-xs text-slate-400">Secure file transfer</span>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="max-w-2xl mx-auto px-6 py-10"
+        x-data="uploader({
+          presignedUrl: {{ presigned_url | tojson }},
+          engagementId: {{ engagement_id | tojson }},
+          alreadyUploaded: {{ 'true' if already_uploaded else 'false' }},
+          expirySeconds: {{ expiry_seconds }},
+        })">
+
+    <!-- Engagement context -->
+    <div class="mb-8">
+      <h1 class="text-2xl font-semibold text-slate-900">Anonymized Extract Upload</h1>
+      <p class="mt-1 text-slate-500 text-sm">{{ display_name }} &middot; <span class="font-mono text-xs">{{ engagement_id }}</span></p>
+    </div>
+
+    <!-- Already uploaded banner -->
+    <template x-if="alreadyUploaded && state === 'idle'">
+      <div class="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 flex items-start gap-3">
+        <svg class="w-5 h-5 text-amber-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+        </svg>
+        <p class="text-sm text-amber-800">An extract has already been uploaded for this engagement. Uploading again will overwrite it.</p>
+      </div>
+    </template>
+
+    <!-- Drop zone -->
+    <template x-if="state !== 'success'">
+      <div>
+        <div
+          class="relative rounded-xl border-2 border-dashed transition-all duration-150 cursor-pointer"
+          :class="{
+            'border-slate-300 bg-white hover:border-indicina-600 hover:bg-indicina-50': state === 'idle',
+            'border-indicina-600 bg-indicina-50': state === 'dragover',
+            'border-slate-200 bg-slate-50 cursor-default': state === 'uploading',
+          }"
+          @dragover.prevent="handleDragover"
+          @dragleave.prevent="handleDragleave"
+          @drop.prevent="handleDrop"
+          @click="state !== 'uploading' && $refs.fileInput.click()"
+          x-ref="dropzone"
+        >
+          <input
+            type="file"
+            accept=".gz,.tgz"
+            class="hidden"
+            x-ref="fileInput"
+            @change="handleFileSelect"
+          />
+
+          <div class="px-8 py-14 text-center">
+
+            <!-- Idle / dragover -->
+            <template x-if="state === 'idle' || state === 'dragover'">
+              <div>
+                <svg class="mx-auto mb-4 w-12 h-12 transition-colors"
+                     :class="state === 'dragover' ? 'text-indicina-600' : 'text-slate-300'"
+                     fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                        d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
+                </svg>
+                <p class="text-base font-medium text-slate-700" x-text="state === 'dragover' ? 'Drop to upload' : 'Drag &amp; drop your extract file here'"></p>
+                <p class="mt-1 text-sm text-slate-400">or click to browse &nbsp;&middot;&nbsp; <span class="font-mono">.tar.gz</span> only</p>
+              </div>
+            </template>
+
+            <!-- Uploading -->
+            <template x-if="state === 'uploading'">
+              <div class="space-y-4">
+                <p class="text-sm font-medium text-slate-700" x-text="fileName"></p>
+                <div class="w-full bg-slate-200 rounded-full h-2">
+                  <div class="bg-indicina-600 h-2 rounded-full transition-all duration-200"
+                       :style="`width: ${progress}%`"></div>
+                </div>
+                <div class="flex justify-between text-xs text-slate-500">
+                  <span x-text="`${formatBytes(bytesLoaded)} of ${formatBytes(bytesTotal)}`"></span>
+                  <span x-text="speed > 0 ? formatBytes(speed) + '/s' : 'calculating…'"></span>
+                </div>
+                <p class="text-xs text-slate-400" x-text="`${progress}% uploaded`"></p>
+              </div>
+            </template>
+
+            <!-- Validation error -->
+            <template x-if="state === 'error' && !uploadError">
+              <div>
+                <svg class="mx-auto mb-4 w-10 h-10 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                </svg>
+                <p class="text-sm font-medium text-red-700" x-text="validationError"></p>
+                <p class="mt-2 text-xs text-slate-400">Click to choose a different file</p>
+              </div>
+            </template>
+
+          </div>
+        </div>
+
+        <!-- Upload error (outside drop zone so it's always visible) -->
+        <template x-if="state === 'error' && uploadError">
+          <div class="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-4">
+            <div class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-red-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+              <div>
+                <p class="text-sm font-medium text-red-800">Upload failed</p>
+                <p class="mt-1 text-sm text-red-700" x-text="uploadError"></p>
+              </div>
+            </div>
+            <button
+              class="mt-3 text-sm text-indicina-600 hover:underline"
+              @click="resetToIdle"
+            >Try again</button>
+          </div>
+        </template>
+      </div>
+    </template>
+
+    <!-- Success state -->
+    <template x-if="state === 'success'">
+      <div class="rounded-xl border border-green-200 bg-green-50 px-8 py-10 text-center">
+        <svg class="mx-auto mb-4 w-12 h-12 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        </svg>
+        <h2 class="text-lg font-semibold text-green-900">Extract received</h2>
+        <p class="mt-2 text-sm text-green-800" x-text="`${fileName} (${formatBytes(bytesTotal)})`"></p>
+        <div class="mt-6 text-left rounded-lg border border-green-200 bg-white px-5 py-4 text-sm text-slate-600 space-y-2">
+          <p class="font-medium text-slate-700">What happens next</p>
+          <ol class="list-decimal list-inside space-y-1 text-slate-500">
+            <li>Indicina loads your extract into the assessment sandbox.</li>
+            <li>Source inference and AuditEvent metadata are applied per resource.</li>
+            <li>SQL on FHIR semantic assessment runs against the five priority measures.</li>
+            <li>You'll receive preliminary findings via email within one business day.</li>
+          </ol>
+        </div>
+        <p class="mt-5 text-xs text-slate-400">Questions? Contact your Indicina engagement lead.</p>
+      </div>
+    </template>
+
+    <!-- Instructions -->
+    <div class="mt-8 rounded-lg border border-slate-200 bg-white px-5 py-5 text-sm text-slate-600">
+      <p class="font-medium text-slate-700 mb-3">Before uploading</p>
+      <ol class="list-decimal list-inside space-y-2 text-slate-500">
+        <li>Complete Stage 2 PHI redaction locally. The extract must be fully anonymized.</li>
+        <li>Package the output directory: <code class="font-mono text-xs bg-slate-100 px-1 py-0.5 rounded">tar -czf extract.tar.gz ./export-anonymized/</code></li>
+        <li>Verify the archive contains one <code class="font-mono text-xs bg-slate-100 px-1 py-0.5 rounded">.ndjson</code> file per resource type.</li>
+        <li>Drag and drop the <code class="font-mono text-xs bg-slate-100 px-1 py-0.5 rounded">extract.tar.gz</code> file above.</li>
+      </ol>
+    </div>
+
+    <!-- URL expiry notice -->
+    <p class="mt-4 text-center text-xs text-slate-400"
+       x-text="`This upload link expires in ${formatExpiry(expirySeconds)}.`"></p>
+
+  </main>
+
+  <script>
+    function uploader({ presignedUrl, engagementId, alreadyUploaded, expirySeconds }) {
+      return {
+        state: 'idle',
+        presignedUrl,
+        engagementId,
+        alreadyUploaded,
+        expirySeconds,
+        fileName: '',
+        bytesLoaded: 0,
+        bytesTotal: 0,
+        progress: 0,
+        speed: 0,
+        validationError: '',
+        uploadError: '',
+        _startTime: null,
+        _xhr: null,
+
+        handleDragover() {
+          if (this.state === 'uploading') return;
+          this.state = 'dragover';
+        },
+        handleDragleave() {
+          if (this.state === 'dragover') this.state = 'idle';
+        },
+        handleDrop(e) {
+          if (this.state === 'uploading') return;
+          const file = e.dataTransfer.files[0];
+          if (file) this.prepareUpload(file);
+        },
+        handleFileSelect(e) {
+          const file = e.target.files[0];
+          if (file) this.prepareUpload(file);
+          e.target.value = '';
+        },
+
+        prepareUpload(file) {
+          const name = file.name.toLowerCase();
+          if (!name.endsWith('.tar.gz') && !name.endsWith('.tgz')) {
+            this.validationError = `"${file.name}" is not a .tar.gz file. Please package your anonymized export directory first.`;
+            this.uploadError = '';
+            this.state = 'error';
+            return;
+          }
+          this.fileName = file.name;
+          this.bytesTotal = file.size;
+          this.upload(file);
+        },
+
+        async upload(file) {
+          this.state = 'uploading';
+          this.bytesLoaded = 0;
+          this.progress = 0;
+          this.speed = 0;
+          this._startTime = Date.now();
+
+          const url = await this.getFreshUrl();
+          if (!url) return;
+
+          const xhr = new XMLHttpRequest();
+          this._xhr = xhr;
+
+          xhr.upload.onprogress = (e) => {
+            if (!e.lengthComputable) return;
+            this.bytesLoaded = e.loaded;
+            this.bytesTotal = e.total;
+            this.progress = Math.round((e.loaded / e.total) * 100);
+            const elapsed = (Date.now() - this._startTime) / 1000;
+            this.speed = elapsed > 0 ? Math.round(e.loaded / elapsed) : 0;
+          };
+
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              this.state = 'success';
+              this.progress = 100;
+            } else if (xhr.status === 403) {
+              this.uploadError = 'Upload link expired. Refresh the page and try again.';
+              this.state = 'error';
+            } else {
+              this.uploadError = `Upload failed (HTTP ${xhr.status}). Contact your Indicina engagement lead.`;
+              this.state = 'error';
+            }
+          };
+
+          xhr.onerror = () => {
+            this.uploadError = 'Network error. Check your connection and try again.';
+            this.state = 'error';
+          };
+
+          xhr.open('PUT', url);
+          xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+          xhr.send(file);
+        },
+
+        async getFreshUrl() {
+          // If the embedded URL might be stale (page open > expiry), fetch a new one.
+          // For typical 48h expiry this is rarely needed; kept as a safety net.
+          try {
+            const res = await fetch(`/api/presign/${this.engagementId}`);
+            if (!res.ok) throw new Error('presign failed');
+            const data = await res.json();
+            return data.presigned_url;
+          } catch {
+            // Fall back to the URL embedded at page-load time.
+            return this.presignedUrl;
+          }
+        },
+
+        resetToIdle() {
+          if (this._xhr) { this._xhr.abort(); this._xhr = null; }
+          this.state = 'idle';
+          this.uploadError = '';
+          this.validationError = '';
+          this.progress = 0;
+          this.bytesLoaded = 0;
+          this.speed = 0;
+        },
+
+        formatBytes(bytes) {
+          if (bytes === 0) return '0 B';
+          const k = 1024;
+          const sizes = ['B', 'KB', 'MB', 'GB'];
+          const i = Math.floor(Math.log(bytes) / Math.log(k));
+          return `${(bytes / Math.pow(k, i)).toFixed(1)} ${sizes[i]}`;
+        },
+
+        formatExpiry(seconds) {
+          if (seconds >= 86400) return `${Math.round(seconds / 86400)} day${Math.round(seconds / 86400) !== 1 ? 's' : ''}`;
+          if (seconds >= 3600) return `${Math.round(seconds / 3600)} hour${Math.round(seconds / 3600) !== 1 ? 's' : ''}`;
+          return `${Math.round(seconds / 60)} minutes`;
+        },
+      };
+    }
+  </script>
+</body>
+</html>
