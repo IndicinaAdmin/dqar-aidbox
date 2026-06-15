@@ -3,15 +3,20 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.backends.legacy:build"
 
 [project]
-name = "dqar-uc4"
+name = "dqar-aidbox"
 version = "0.1.0"
 requires-python = ">=3.11"
-
-[project.optional-dependencies]
-pipeline = [
+description = "DQAR Aidbox-side sandbox — ingest, semantic assessment, findings report"
+dependencies = [
+    "dqar-contracts>=1.0.0,<2.0.0",
     "requests",
     "boto3",
     "python-dotenv",
+]
+
+[project.optional-dependencies]
+lineage = [
+    "openlineage-python",
 ]
 web = [
     "fastapi",
@@ -19,9 +24,6 @@ web = [
     "boto3",
     "jinja2",
     "python-multipart",
-]
-lineage = [
-    "openlineage-python",
 ]
 report = [
     "anthropic",

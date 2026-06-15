@@ -1,157 +1,145 @@
-# CLAUDE.md — Indicina DQAR-UC4 Data Lineage Platform
-*Digital Quality Audit Readiness — Aidbox / AWS environment*
+# CLAUDE.md — dqar-aidbox
+*Digital Quality Audit Readiness — Aidbox-Side Sandbox*
 *Last updated: June 2026 | Confidential — Internal*
 
 ---
 
 ## What This Project Is
 
-DQAR-UC4 is the **Indicina-operated backend** of the DQAR Assessment pipeline. It receives anonymized FHIR extracts uploaded by client-side UC1, loads them into Aidbox with full AuditEvent provenance metadata, runs SQL on FHIR semantic assessment, and generates three-tier findings reports.
+The Aidbox-side component of the DQAR platform. Receives the egress package from
+`dqar-client-kit` (anonymized extract + conformance reports), loads into Aidbox
+with full AuditEvent provenance metadata, runs SQL on FHIR semantic assessment,
+and generates three-tier findings reports.
 
-**Project boundary:** Everything from S3 inward. No PHI. No client-side code.
+**Project boundary:** Everything from S3 inward. No PHI (Path B) or PHI under
+plan BAA (Path C). No client-side conformance testing code.
 
-For the client-side conformance kit (Stage 1 + Stage 2), see `../dqar-uc1`.
+---
+
+## Aidbox / FHIR Infrastructure Reference
+
+> See @docs/aidbox-kb.md for all Aidbox, SQL on FHIR, and FHIR API implementation details.
+
+---
+
+## Sister Repos
+
+| Repo | Role |
+|---|---|
+| `dqar-contracts` | Shared schemas, ViewDefinitions, SQL, EXT definitions. Source of truth for the client–sandbox interface. |
+| `dqar-client-kit` | Client-side conformance testing kit. Produces the egress package this repo consumes. |
+
+**Dependency:** `dqar-contracts>=1.0.0,<2.0.0` is installed into this repo's venv.
+During development: `pip install -e ../dqar-contracts`.
+In CI/prod: install from private package registry.
+
+**Never import from `dqar-client-kit` directly.** Consume the egress package only.
 
 ---
 
 ## Architecture Position
 
 ```
-CLIENT ENVIRONMENT (PHI — dqar-uc1)         INDICINA / AIDBOX (anonymized — this repo)
-─────────────────────────────────           ────────────────────────────────────────────
-Stage 1a  Bulk FHIR API preflight      →    S3 presigned PUT URL (web/presign.py)
-Stage 1b  NDJSON structural check            ↓
-Stage 1c  US Core conformance          →    Stage 3  Load to Aidbox  (stage3/load.py)
-Stage 2   PHI redaction                      ↓
-          tar.gz upload via UI         →    Stage 4  SQL on FHIR assessment (stage4/)
-                                             ↓
-                                            Stage 5  Findings report (stage5/)
+CLIENT ENVIRONMENT (dqar-client-kit)         THIS REPO (dqar-aidbox)
+────────────────────────────────           ────────────────────────────────
+Stage 1  Conformance testing          →    S3 presigned PUT URL (web/presign.py)
+Stage 2  PHI redaction (Path B)            ↓
+         egress package (tar.gz)      →    Stage 3  Load to Aidbox  (stage3/load.py)
+                                           ↓
+                                          Stage 4  SQL on FHIR assessment (stage4/)
+                                           ↓
+                                          Stage 5  Findings report (stage5/)
 ```
 
 ---
 
-## Aidbox / FHIR Infrastructure Reference
+## Seven AuditEvent Extension Fields
 
-> For all development work involving Aidbox, SQL on FHIR, access control, subscriptions, MCP tools, or Aidbox configuration — see @docs/aidbox-kb.md
+EXT 1–5 from inference algorithm (`stage3/inference.py`).
+EXT 6–7 from pipeline orchestrator, set once before the resource loop begins.
 
----
+| EXT | URL | Source |
+|---|---|---|
+| EXT 1 | `http://indicina.com/fhir/ext/source-type` | `infer_source_metadata()` |
+| EXT 2 | `http://indicina.com/fhir/ext/source-system-id` | `infer_source_metadata()` |
+| EXT 3 | `http://indicina.com/fhir/ext/source-feed-id` | `infer_source_metadata()` |
+| EXT 4 | `http://indicina.com/fhir/ext/source-inference-confidence` | `infer_source_metadata()` |
+| EXT 5 | `http://indicina.com/fhir/ext/ecds-ssor` | Derived from EXT 1 |
+| EXT 6 | `http://indicina.com/fhir/ext/ingest-pipeline-id` | Orchestrator |
+| EXT 7 | `http://indicina.com/fhir/ext/ol-run-id` | Orchestrator (ingest batch tag) |
 
-## Seven AuditEvent Extension Fields (Canonical — dqar-05 authoritative)
-
-Every resource loaded into Aidbox is posted as a **single atomic FHIR transaction bundle** together with an AuditEvent carrying all seven extensions. No separate writes.
-
-| Extension URL | Field | EXT | Source |
-|---|---|---|---|
-| `http://indicina.com/fhir/ext/source-type` | source-type | EXT 1 | Inference algorithm |
-| `http://indicina.com/fhir/ext/source-system-id` | source-system-id | EXT 2 | Inference algorithm |
-| `http://indicina.com/fhir/ext/source-feed-id` | source-feed-id | EXT 3 | Inference algorithm |
-| `http://indicina.com/fhir/ext/source-inference-confidence` | source-inference-confidence | EXT 4 | Inference algorithm |
-| `http://indicina.com/fhir/ext/ecds-ssor` | ecds-ssor | EXT 5 | Derived from EXT 1 via SSoR mapping |
-| `http://indicina.com/fhir/ext/ingest-pipeline-id` | ingest-pipeline-id | EXT 6 | Pipeline orchestrator (uuid.uuid4() at run start) |
-| `http://indicina.com/fhir/ext/ol-run-id` | ol-run-id | EXT 7 | OpenLineage start_run() UUID |
-
-**EXT 1–5** are produced by `infer_source_metadata()` in `specs/dqar-05-source-inference-algorithm.md`.
-**EXT 6–7** are set once by the pipeline orchestrator before the resource loop begins — not by the inference algorithm.
-
----
-
-## Multitenancy Model
-
-Single Aidbox instance (Multibox). Per-engagement isolation via Organization-scoped AccessPolicies at the FHIR API layer.
-
-- **One Organization resource per engagement** — created by `stage3/provision.py`
-- **Two OAuth clients per engagement** — `{eng-id}-ingest` (write, pipeline use only) and `{eng-id}-read` (read-only, sent to client tester)
-- **Direct SQL (`/$sql`) is not exposed to clients** — org-scoping applies only at the FHIR API layer
-
----
-
-## OpenLineage Integration
-
-- `shared/lineage.py` emits OpenLineage RunEvents to Marquez / OpenMetadata
-- `ol_run_id` UUID from `start_run()` becomes EXT 7 on every AuditEvent loaded in that run
-- This creates a bidirectional join: AuditEvent → lineage graph → measure component output
-- Required for DQAR provenance maturity Level 3+
-
----
-
-## S3 Upload Portal
-
-`web/` is a FastAPI application that:
-1. Serves `GET /upload/{engagement_id}` — generates a presigned S3 PUT URL and renders the drag-drop UI
-2. Exposes `GET /api/presign/{engagement_id}` — refreshes the URL if the page has been open a while
-3. Exposes `GET /api/status/{engagement_id}` — checks whether `extract.tar.gz` has landed in S3
-
-**Run:** `uvicorn web.app:app --reload --port 8000`
-
-S3 bucket CORS must allow PUT from the portal origin before browser uploads work. See `web/presign.py` for the required CORS config.
-
----
-
-## Engagement Config Schema
-
-Engagement configs live in `config/engagements/{engagement_id}.json` (gitignored — contain credentials).
-
-Required S3 fields for UC4:
-```json
-{
-  "name": "eng-clienta-jun26",
-  "server_type": "aidbox",
-  "base_url": "https://dqar-sandbox.aidbox.app",
-  "client_id": "eng-clienta-ingest",
-  "client_secret": "...",
-  "s3_bucket": "dqar-sandbox",
-  "s3_prefix": "engagements/eng-clienta-jun26",
-  "s3_region": "us-east-1",
-  "s3_upload_expiry": 172800,
-  "organization_id": "org-eng-clienta-jun26",
-  "display_name": "Acme Health Plan"
-}
-```
+**EXT 7 is an ingest batch tag, not a Marquez join key.** Marquez has been dropped.
+OpenLineage `RunEvent`s go directly to OpenMetadata. See `shared/lineage.py`.
 
 ---
 
 ## Project Structure
 
 ```
-dqar-uc4/
-├── shared/
-│   ├── engagement.py       Auth adapter (copied from dqar-uc1; keep in sync)
-│   ├── ingest.py           build_ingest_bundle() — assembles resource + AuditEvent bundle
-│   └── lineage.py          LineageEmitter — OpenLineage start/end run
+dqar-aidbox/
 ├── stage3/
-│   ├── provision.py        Per-engagement Aidbox provisioning (Organization + OAuth clients)
-│   └── load.py             S3 download → inference → bundle POST → lineage emit
+│   ├── provision.py        # Per-engagement Aidbox org + OAuth client provisioning
+│   ├── load.py             # S3 download → inference → atomic bundle POST → lineage emit
+│   └── inference.py        # Source-type inference algorithm (Priority 0-6)
 ├── stage4/
-│   └── semantic_assessment.py   SQL on FHIR queries for 5 priority measures
+│   └── semantic_assessment.py  # SQL measures loaded from dqar-contracts; AuditEvent joins
 ├── stage5/
-│   └── findings.py         Three-tier findings report generation
+│   └── findings.py         # Three-tier findings report generation
+├── pipeline/
+│   └── ingest/
+│       └── bulk_export.py  # FHIR server → NDJSON export utility
 ├── web/
-│   ├── app.py              FastAPI — upload portal routes
-│   ├── presign.py          S3 presigned URL generation + status check
-│   └── templates/
-│       └── upload.html     Drag-drop client upload UI
+│   ├── app.py              # S3 presigned upload portal
+│   ├── presign.py
+│   └── templates/upload.html
+├── shared/
+│   ├── engagement.py       # Re-export shim → dqar_contracts.shared.engagement
+│   └── lineage.py          # OpenLineage RunEvent → OpenMetadata (not Marquez)
 ├── init_bundle/
-│   └── init-bundle.json    Aidbox Init Bundle (platform config — StructureDefinitions, AccessPolicies)
-├── viewdefs/
-│   └── *.json              SQL on FHIR ViewDefinitions (measure lineage, source summary)
-├── config/
-│   ├── engagement.schema.json
-│   └── engagements/        (gitignored — contain credentials)
-├── specs/                  Reference copies of shared KB specs
-└── docs/
-    └── aidbox-kb.md        Aidbox platform reference
+│   ├── generate.py         # CI: generates init-bundle.json from dqar-contracts
+│   └── init-bundle.json    # Generated — do not hand-edit
+├── viewdefs/               # Symlinked or CI-copied from dqar-contracts at deploy
+├── specs/                  # Reference copies for Claude Code context (not source of truth)
+├── docs/
+│   └── aidbox-kb.md
+└── config/
+    └── engagements/        # Gitignored
 ```
 
 ---
 
-## Development Principles
+## Init Bundle
 
-- **No PHI ever enters this environment.** Stage 2 anonymization runs in the client environment before upload.
-- **Atomic bundle requirement is inviolable.** Every resource and its AuditEvent must be a single FHIR transaction bundle POST. `build_ingest_bundle()` in `shared/ingest.py` is the only sanctioned assembly path.
-- **EXT 1–5 from inference, EXT 6–7 from orchestrator.** Never reverse this. Never set EXT 6/7 inside the inference algorithm.
-- **Unknown source-type is a finding, not an error.** Log it, include it in findings, do not suppress.
-- **Client testers get FHIR API credentials only.** Never issue `/$sql` access to clients — org-scoping does not apply at the SQL layer.
-- **Assessment phase is vendor-neutral.** Aidbox and Termbox appear in the roadmap phase, not in assessment findings output.
+The Aidbox Init Bundle is generated from `dqar-contracts` at CI time:
+
+```bash
+python init_bundle/generate.py
+```
+
+Never hand-edit `init_bundle/init-bundle.json`. It is regenerated on every deploy.
+All ViewDefinitions in the bundle have `getResourceKey()` enforced by the generator.
+
+---
+
+## Measure SQL
+
+Stage 4 loads parallel SQL reconstruction queries from `dqar-contracts`:
+
+```python
+from stage4.semantic_assessment import _load_measure_sql
+cbp_sql = _load_measure_sql("cbp_numerator")
+```
+
+The SQL queries project `observation_id` (or equivalent resource key) for the
+lineage chain. CQL produces the population rate; SQL reconstruction produces the
+same rate plus resource-level evidence. Disagreement is a Tier 2 finding.
+
+---
+
+## Multitenancy
+
+Single Aidbox instance (Multibox). Per-engagement isolation via Organization-scoped
+AccessPolicies. One Organization resource per engagement, created by `stage3/provision.py`.
 
 ---
 
@@ -159,15 +147,28 @@ dqar-uc4/
 
 | File | Contents |
 |---|---|
-| `docs/aidbox-kb.md` | Aidbox platform architecture, APIs, SQL on FHIR, MCP tools |
-| `specs/dqar-05-source-inference-algorithm.md` | Full inference algorithm — EXT 1–5 derivation |
-| `specs/dqar-06-uc1-app-technical-specification.md` | Full UC1 pipeline spec including Stage 3–5 |
-| `specs/DQAR_Bulk_FHIR_Extract_Specification_v2_0.md` | Extract format, 7-extension AuditEvent spec |
+| `docs/aidbox-kb.md` | Aidbox platform reference |
+| `specs/dqar-05-source-inference-algorithm.md` | Full Priority 0-6 inference spec |
+| `specs/dqar-05-amendment-priority-0-provenance.md` | Priority 0 Provenance lookup |
+| `specs/dqar-06-uc1-app-technical-specification.md` | Full pipeline spec Stage 3–5 |
+
+---
+
+## Development Principles
+
+1. **Atomic bundle requirement is inviolable.** Resource + AuditEvent in one transaction bundle. No separate POSTs.
+2. **EXT 1–5 from inference, EXT 6–7 from orchestrator.** Never reverse this.
+3. **Unknown source-type is a finding, not a suppressed error.** Log it. Surface it in findings.
+4. **Init Bundle is generated from contracts.** Never hand-edit init-bundle.json.
+5. **SQL measures come from dqar-contracts.** Never hardcode measure SQL in this repo.
+6. **OpenLineage → OpenMetadata directly.** Marquez is dropped. ol-run-id is a batch tag only.
+7. **Client testers get FHIR API credentials only.** Never issue /$sql access to clients.
 
 ---
 
 ## Unanswered Questions — Confirm With Health Samurai
 
 1. Does Aidbox's CQL evaluation engine generate AuditEvents or Provenance resources referencing resources consumed during measure calculation?
-2. Does Aidbox support auto-generation of Provenance resources on ingest (companion Provenance on every POST from an external system)?
-3. Termbox standalone licensing terms for plans with existing FHIR servers.
+2. Does Aidbox support auto-generation of Provenance resources on ingest?
+3. Does Interbox support the typed/testable/modular mapping pattern described at DevDays 2026?
+4. Termbox standalone licensing terms for plans with existing FHIR servers.

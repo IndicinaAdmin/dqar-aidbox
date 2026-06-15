@@ -1,0 +1,485 @@
+{
+  "resourceType": "Bundle",
+  "type": "transaction",
+  "meta": {
+    "tag": [
+      {
+        "system": "http://indicina.com/fhir/tags",
+        "code": "init-bundle",
+        "display": "Generated 2026-06-15T20:32:44.311444+00:00 from dqar-contracts"
+      }
+    ]
+  },
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "ViewDefinition",
+        "name": "condition_summary",
+        "resource": "Condition",
+        "status": "active",
+        "description": "Condition summary for denominator identification across measures.",
+        "select": [
+          {
+            "column": [
+              {
+                "name": "condition_id",
+                "path": "getResourceKey()"
+              },
+              {
+                "name": "patient_id",
+                "path": "subject.getId()"
+              },
+              {
+                "name": "encounter_id",
+                "path": "encounter.getId()"
+              },
+              {
+                "name": "clinical_status",
+                "path": "clinicalStatus.coding.code.first()"
+              },
+              {
+                "name": "verification_status",
+                "path": "verificationStatus.coding.code.first()"
+              },
+              {
+                "name": "onset_date",
+                "path": "onset.ofType(dateTime)"
+              },
+              {
+                "name": "recorded_date",
+                "path": "recordedDate"
+              }
+            ]
+          },
+          {
+            "forEach": "code.coding",
+            "column": [
+              {
+                "name": "code_system",
+                "path": "system"
+              },
+              {
+                "name": "code_value",
+                "path": "code"
+              },
+              {
+                "name": "code_display",
+                "path": "display"
+              }
+            ]
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "ViewDefinition/condition_summary"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "ViewDefinition",
+        "name": "encounter_summary",
+        "resource": "Encounter",
+        "status": "active",
+        "description": "Encounter summary for measure context constraints (type, class, period).",
+        "select": [
+          {
+            "column": [
+              {
+                "name": "encounter_id",
+                "path": "getResourceKey()"
+              },
+              {
+                "name": "patient_id",
+                "path": "subject.getId()"
+              },
+              {
+                "name": "status",
+                "path": "status"
+              },
+              {
+                "name": "class_code",
+                "path": "class.code"
+              },
+              {
+                "name": "period_start",
+                "path": "period.start"
+              },
+              {
+                "name": "period_end",
+                "path": "period.end"
+              },
+              {
+                "name": "service_provider",
+                "path": "serviceProvider.getId()"
+              }
+            ]
+          },
+          {
+            "forEach": "type.coding",
+            "column": [
+              {
+                "name": "type_system",
+                "path": "system"
+              },
+              {
+                "name": "type_code",
+                "path": "code"
+              }
+            ]
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "ViewDefinition/encounter_summary"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "ViewDefinition",
+        "name": "observation_bp",
+        "resource": "Observation",
+        "status": "active",
+        "description": "Blood pressure Observations for CBP measure. getResourceKey() required for lineage chain.",
+        "select": [
+          {
+            "column": [
+              {
+                "name": "observation_id",
+                "path": "getResourceKey()"
+              },
+              {
+                "name": "patient_id",
+                "path": "subject.getId()"
+              },
+              {
+                "name": "encounter_id",
+                "path": "encounter.getId()"
+              },
+              {
+                "name": "effective_date",
+                "path": "effectiveDateTime"
+              },
+              {
+                "name": "systolic",
+                "path": "component.where(code.coding.code='8480-6').value.ofType(Quantity).value"
+              },
+              {
+                "name": "diastolic",
+                "path": "component.where(code.coding.code='8462-4').value.ofType(Quantity).value"
+              },
+              {
+                "name": "category_code",
+                "path": "category.coding.code.first()"
+              }
+            ]
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "ViewDefinition/observation_bp"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "ViewDefinition",
+        "name": "observation_hba1c",
+        "resource": "Observation",
+        "status": "active",
+        "description": "HbA1c Observations for CDC measure.",
+        "select": [
+          {
+            "column": [
+              {
+                "name": "observation_id",
+                "path": "getResourceKey()"
+              },
+              {
+                "name": "patient_id",
+                "path": "subject.getId()"
+              },
+              {
+                "name": "encounter_id",
+                "path": "encounter.getId()"
+              },
+              {
+                "name": "loinc_code",
+                "path": "code.coding.where(system='http://loinc.org').code.first()"
+              },
+              {
+                "name": "value_quantity",
+                "path": "value.ofType(Quantity).value"
+              },
+              {
+                "name": "value_unit",
+                "path": "value.ofType(Quantity).unit"
+              },
+              {
+                "name": "effective_date",
+                "path": "effectiveDateTime"
+              }
+            ]
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "ViewDefinition/observation_hba1c"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "ViewDefinition",
+        "name": "patient_demographics",
+        "resource": "Patient",
+        "status": "active",
+        "description": "Patient demographics for age/sex constraints and denominator population.",
+        "select": [
+          {
+            "column": [
+              {
+                "name": "patient_id",
+                "path": "getResourceKey()"
+              },
+              {
+                "name": "gender",
+                "path": "gender"
+              },
+              {
+                "name": "birth_date",
+                "path": "birthDate"
+              },
+              {
+                "name": "active",
+                "path": "active"
+              }
+            ]
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "ViewDefinition/patient_demographics"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "StructureDefinition",
+        "id": "indicina-ext1",
+        "url": "http://indicina.com/fhir/ext/source-type",
+        "name": "DQAREXT1",
+        "status": "active",
+        "kind": "complex-type",
+        "abstract": false,
+        "type": "Extension",
+        "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension",
+        "derivation": "constraint",
+        "differential": {
+          "element": [
+            {
+              "id": "Extension.value[x]",
+              "path": "Extension.value[x]",
+              "type": [
+                {
+                  "code": "Code"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "request": {
+        "method": "PUT",
+        "url": "StructureDefinition/indicina-ext1"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "StructureDefinition",
+        "id": "indicina-ext2",
+        "url": "http://indicina.com/fhir/ext/source-system-id",
+        "name": "DQAREXT2",
+        "status": "active",
+        "kind": "complex-type",
+        "abstract": false,
+        "type": "Extension",
+        "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension",
+        "derivation": "constraint",
+        "differential": {
+          "element": [
+            {
+              "id": "Extension.value[x]",
+              "path": "Extension.value[x]",
+              "type": [
+                {
+                  "code": "String"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "request": {
+        "method": "PUT",
+        "url": "StructureDefinition/indicina-ext2"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "StructureDefinition",
+        "id": "indicina-ext3",
+        "url": "http://indicina.com/fhir/ext/source-feed-id",
+        "name": "DQAREXT3",
+        "status": "active",
+        "kind": "complex-type",
+        "abstract": false,
+        "type": "Extension",
+        "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension",
+        "derivation": "constraint",
+        "differential": {
+          "element": [
+            {
+              "id": "Extension.value[x]",
+              "path": "Extension.value[x]",
+              "type": [
+                {
+                  "code": "String"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "request": {
+        "method": "PUT",
+        "url": "StructureDefinition/indicina-ext3"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "StructureDefinition",
+        "id": "indicina-ext4",
+        "url": "http://indicina.com/fhir/ext/source-inference-confidence",
+        "name": "DQAREXT4",
+        "status": "active",
+        "kind": "complex-type",
+        "abstract": false,
+        "type": "Extension",
+        "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension",
+        "derivation": "constraint",
+        "differential": {
+          "element": [
+            {
+              "id": "Extension.value[x]",
+              "path": "Extension.value[x]",
+              "type": [
+                {
+                  "code": "Code"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "request": {
+        "method": "PUT",
+        "url": "StructureDefinition/indicina-ext4"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "StructureDefinition",
+        "id": "indicina-ext5",
+        "url": "http://indicina.com/fhir/ext/ecds-ssor",
+        "name": "DQAREXT5",
+        "status": "active",
+        "kind": "complex-type",
+        "abstract": false,
+        "type": "Extension",
+        "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension",
+        "derivation": "constraint",
+        "differential": {
+          "element": [
+            {
+              "id": "Extension.value[x]",
+              "path": "Extension.value[x]",
+              "type": [
+                {
+                  "code": "Code"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "request": {
+        "method": "PUT",
+        "url": "StructureDefinition/indicina-ext5"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "StructureDefinition",
+        "id": "indicina-ext6",
+        "url": "http://indicina.com/fhir/ext/ingest-pipeline-id",
+        "name": "DQAREXT6",
+        "status": "active",
+        "kind": "complex-type",
+        "abstract": false,
+        "type": "Extension",
+        "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension",
+        "derivation": "constraint",
+        "differential": {
+          "element": [
+            {
+              "id": "Extension.value[x]",
+              "path": "Extension.value[x]",
+              "type": [
+                {
+                  "code": "String"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "request": {
+        "method": "PUT",
+        "url": "StructureDefinition/indicina-ext6"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "StructureDefinition",
+        "id": "indicina-ext7",
+        "url": "http://indicina.com/fhir/ext/ol-run-id",
+        "name": "DQAREXT7",
+        "status": "active",
+        "kind": "complex-type",
+        "abstract": false,
+        "type": "Extension",
+        "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension",
+        "derivation": "constraint",
+        "differential": {
+          "element": [
+            {
+              "id": "Extension.value[x]",
+              "path": "Extension.value[x]",
+              "type": [
+                {
+                  "code": "String"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "request": {
+        "method": "PUT",
+        "url": "StructureDefinition/indicina-ext7"
+      }
+    }
+  ]
+}
