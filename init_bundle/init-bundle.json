@@ -4,9 +4,9 @@
   "meta": {
     "tag": [
       {
-        "system": "http://indicina.com/fhir/tags",
+        "system": "http://Sonian.io/fhir/tags",
         "code": "init-bundle",
-        "display": "Generated 2026-06-15T20:32:44.311444+00:00 from dqar-contracts"
+        "display": "Generated 2026-06-16T13:49:29.548703+00:00 from dqar-contracts"
       }
     ]
   },
@@ -267,8 +267,8 @@
     {
       "resource": {
         "resourceType": "StructureDefinition",
-        "id": "indicina-ext1",
-        "url": "http://indicina.com/fhir/ext/source-type",
+        "id": "sonian-ext1",
+        "url": "http://Sonian.io/fhir/ext/source-type",
         "name": "DQAREXT1",
         "status": "active",
         "kind": "complex-type",
@@ -292,14 +292,14 @@
       },
       "request": {
         "method": "PUT",
-        "url": "StructureDefinition/indicina-ext1"
+        "url": "StructureDefinition/sonian-ext1"
       }
     },
     {
       "resource": {
         "resourceType": "StructureDefinition",
-        "id": "indicina-ext2",
-        "url": "http://indicina.com/fhir/ext/source-system-id",
+        "id": "sonian-ext2",
+        "url": "http://Sonian.io/fhir/ext/source-system-id",
         "name": "DQAREXT2",
         "status": "active",
         "kind": "complex-type",
@@ -323,14 +323,14 @@
       },
       "request": {
         "method": "PUT",
-        "url": "StructureDefinition/indicina-ext2"
+        "url": "StructureDefinition/sonian-ext2"
       }
     },
     {
       "resource": {
         "resourceType": "StructureDefinition",
-        "id": "indicina-ext3",
-        "url": "http://indicina.com/fhir/ext/source-feed-id",
+        "id": "sonian-ext3",
+        "url": "http://Sonian.io/fhir/ext/source-feed-id",
         "name": "DQAREXT3",
         "status": "active",
         "kind": "complex-type",
@@ -354,14 +354,14 @@
       },
       "request": {
         "method": "PUT",
-        "url": "StructureDefinition/indicina-ext3"
+        "url": "StructureDefinition/sonian-ext3"
       }
     },
     {
       "resource": {
         "resourceType": "StructureDefinition",
-        "id": "indicina-ext4",
-        "url": "http://indicina.com/fhir/ext/source-inference-confidence",
+        "id": "sonian-ext4",
+        "url": "http://Sonian.io/fhir/ext/source-inference-confidence",
         "name": "DQAREXT4",
         "status": "active",
         "kind": "complex-type",
@@ -385,14 +385,14 @@
       },
       "request": {
         "method": "PUT",
-        "url": "StructureDefinition/indicina-ext4"
+        "url": "StructureDefinition/sonian-ext4"
       }
     },
     {
       "resource": {
         "resourceType": "StructureDefinition",
-        "id": "indicina-ext5",
-        "url": "http://indicina.com/fhir/ext/ecds-ssor",
+        "id": "sonian-ext5",
+        "url": "http://Sonian.io/fhir/ext/ecds-ssor",
         "name": "DQAREXT5",
         "status": "active",
         "kind": "complex-type",
@@ -416,14 +416,14 @@
       },
       "request": {
         "method": "PUT",
-        "url": "StructureDefinition/indicina-ext5"
+        "url": "StructureDefinition/sonian-ext5"
       }
     },
     {
       "resource": {
         "resourceType": "StructureDefinition",
-        "id": "indicina-ext6",
-        "url": "http://indicina.com/fhir/ext/ingest-pipeline-id",
+        "id": "sonian-ext6",
+        "url": "http://Sonian.io/fhir/ext/ingest-pipeline-id",
         "name": "DQAREXT6",
         "status": "active",
         "kind": "complex-type",
@@ -447,14 +447,14 @@
       },
       "request": {
         "method": "PUT",
-        "url": "StructureDefinition/indicina-ext6"
+        "url": "StructureDefinition/sonian-ext6"
       }
     },
     {
       "resource": {
         "resourceType": "StructureDefinition",
-        "id": "indicina-ext7",
-        "url": "http://indicina.com/fhir/ext/ol-run-id",
+        "id": "sonian-ext7",
+        "url": "http://Sonian.io/fhir/ext/ol-run-id",
         "name": "DQAREXT7",
         "status": "active",
         "kind": "complex-type",
@@ -478,7 +478,7 @@
       },
       "request": {
         "method": "PUT",
-        "url": "StructureDefinition/indicina-ext7"
+        "url": "StructureDefinition/sonian-ext7"
       }
     }
   ]

@@ -1,22 +1,22 @@
 # DQAR Use Case Index
-**Indicina Consulting Business — Three Active Use Cases**
+**Sonian Consulting Business — Three Active Use Cases**
 *Version: June 2026 v2 | Confidential — Internal Reference*
 
 ---
 
 ## Governing Decisions
 
-**Indicina will not pursue NCQA audit certification.**
-Certifying against Vol. 5 — the framework DQAR argues is inadequate — creates a credibility conflict. Staying advisory means Indicina is never competitive with certified auditors, is free to assess dimensions Vol. 5 doesn't cover, and is not tied to the HEDIS calendar.
+**Sonian will not pursue NCQA audit certification.**
+Certifying against Vol. 5 — the framework DQAR argues is inadequate — creates a credibility conflict. Staying advisory means Sonian is never competitive with certified auditors, is free to assess dimensions Vol. 5 doesn't cover, and is not tied to the HEDIS calendar.
 
 **All use cases are advisory and consulting services, not certification services.**
 
 **The core value proposition:**
 NCQA certifies that the measure logic executes correctly. NCQA DCS explicitly does not validate data mapping or accuracy. DQAR fills that gap — validating the five semantic layers between raw payer data and the CQL engine, and assessing the MDM maturity, metadata management capability, and data governance policies that determine whether data quality is sustainable across measurement periods.
 
-*Someone else certifies the plumbing. Indicina certifies the water.*
+*Someone else certifies the plumbing. Sonian certifies the water.*
 
-**Level 6 governance maturity rubric:** Indicina's proprietary DQAR maturity rubric is structured using the CMMI-DMM five-level progression (Initial → Repeatable → Defined → Managed → Optimized) and grounded in the DAMA-DMBOK knowledge areas for data governance, MDM, metadata management, data quality, and data operations. It is calibrated specifically for payer HEDIS pipeline operations — more actionable than either generic model because it names the specific failure modes, tools, and regulatory deadlines relevant to the buyer. This is Indicina IP with no licensing dependency. DAMA-DMBOK slides and reference material will be uploaded to the DQAR Shared KB project to anchor the rubric development.
+**Level 6 governance maturity rubric:** Sonian's proprietary DQAR maturity rubric is structured using the CMMI-DMM five-level progression (Initial → Repeatable → Defined → Managed → Optimized) and grounded in the DAMA-DMBOK knowledge areas for data governance, MDM, metadata management, data quality, and data operations. It is calibrated specifically for payer HEDIS pipeline operations — more actionable than either generic model because it names the specific failure modes, tools, and regulatory deadlines relevant to the buyer. This is Sonian IP with no licensing dependency. DAMA-DMBOK slides and reference material will be uploaded to the DQAR Shared KB project to anchor the rubric development.
 
 ---
 
@@ -32,14 +32,14 @@ NCQA certifies that the measure logic executes correctly. NCQA DCS explicitly do
 
 | # | Name | Rationale for deferral |
 |---|---|---|
-| — | Pre-Audit Digital Readiness Preparation | Deferred — not abandoned. Indicina's approach lets plans keep current vendor contracts and architectures in place. As DQAR assessments demonstrate more agile, affordable, and compliant workflows for FHIR and dQM, plans will see the case for full migration to Health Samurai — not just for Payerbox and CMS API compliance, but as the ideal digital quality measure reporting environment: reference PostgreSQL with data lineage embedded at ingestion, native measure attribution via AuditEvent, and engine-agnostic CQL execution. Pre-Audit Preparation becomes a natural Phase 2 service once that migration is underway. |
+| — | Pre-Audit Digital Readiness Preparation | Deferred — not abandoned. Sonian's approach lets plans keep current vendor contracts and architectures in place. As DQAR assessments demonstrate more agile, affordable, and compliant workflows for FHIR and dQM, plans will see the case for full migration to Health Samurai — not just for Payerbox and CMS API compliance, but as the ideal digital quality measure reporting environment: reference PostgreSQL with data lineage embedded at ingestion, native measure attribution via AuditEvent, and engine-agnostic CQL execution. Pre-Audit Preparation becomes a natural Phase 2 service once that migration is underway. |
 | — | CMS Interoperability Compliance Readiness | Deferred — different buyer (CIO/technology vs. CDO/quality), different regulatory surface. Payerbox partnership with Health Samurai not yet formalized. Phase 2 once the HS partnership matures and UC3 P2P engagements establish the data quality foundation that CMS API compliance depends on. |
 
 ---
 
 ## Platform Ladder — The Staged Engagement Model
 
-This is the core commercial architecture of the DQAR engagement. The premise: plans need to validate before they commit. Their security and compliance teams need time to complete HIPAA and SOC2 due diligence on Health Samurai before PHI-adjacent infrastructure goes to contract. The ladder gives Indicina productive billable work at every stage while that process runs.
+This is the core commercial architecture of the DQAR engagement. The premise: plans need to validate before they commit. Their security and compliance teams need time to complete HIPAA and SOC2 due diligence on Health Samurai before PHI-adjacent infrastructure goes to contract. The ladder gives Sonian productive billable work at every stage while that process runs.
 
 **The governing principle:** Each rung of the ladder delivers real value on its own. A plan that never advances beyond Rung 1 still gets findings they can act on. The ladder is not a sales funnel — it is a use-case-driven expansion path where trust, compliance clearance, and plan maturity grow together.
 
@@ -48,13 +48,13 @@ RUNG 1 — Offline Conformance Testing (no PHI leaves the plan, no HS infrastruc
   What runs:      Client-side conformance testing kit — Stage 1 (stage1a, stage1b, stage1c)
                   Governance assessment interviews (Track B, Level 6)
                   Feed manifest construction
-  What Indicina delivers:  Preliminary findings on structural and conformance gaps
+  What Sonian delivers:  Preliminary findings on structural and conformance gaps
                            Level 6 governance maturity score
                            Prioritized gap inventory
   Cost:           Low fixed-fee or included in retainer
   HS dependency:  None — plan's security team has not yet reviewed HS
   PHI exposure:   Zero — all conformance testing runs on plan infrastructure
-  Who can remediate: Plan internal staff, Indicina advisory
+  Who can remediate: Plan internal staff, Sonian advisory
 
 RUNG 2 — Anonymized Sandbox Assessment (anonymized data only, HS HIPAA/SOC2 review in parallel)
   What runs:      PHI-redacted ndjson extract loaded to Aidbox sandbox
@@ -62,29 +62,29 @@ RUNG 2 — Anonymized Sandbox Assessment (anonymized data only, HS HIPAA/SOC2 re
                   Termbox VSD conformance testing
                   SQL on FHIR assessment queries (five measures)
                   Risk stratification matrix from AuditEvent metadata
-  What Indicina delivers:  Full three-tier DQAR findings report
+  What Sonian delivers:  Full three-tier DQAR findings report
                            Measure rate impact estimates
                            Remediation roadmap sequenced against MP2029
   Cost:           UC1 fixed-fee engagement
-  HS dependency:  Aidbox + Termbox in Indicina-managed sandbox
+  HS dependency:  Aidbox + Termbox in Sonian-managed sandbox
                   Plan reviews HS HIPAA BAA and SOC2 report concurrently
                   No plan-side HS contract required at this stage
-  PHI exposure:   Zero — anonymized extract only crosses to Indicina/HS sandbox
-  Who can remediate: Plan internal, Indicina, or HS staff per plan's choice
+  PHI exposure:   Zero — anonymized extract only crosses to Sonian/HS sandbox
+  Who can remediate: Plan internal, Sonian, or HS staff per plan's choice
 
 RUNG 3 — Continuous Monitoring with Plan-Controlled Infrastructure (HS contract in place)
   What runs:      UC2 monthly/quarterly monitoring cadence
-                  Termbox client-hosted or Indicina-sandbox per SOW
+                  Termbox client-hosted or Sonian-sandbox per SOW
                   VSD refresh validation at measurement period rollover
                   Level 5 population anomaly detection
-  What Indicina delivers:  Quarterly digital quality scorecard
+  What Sonian delivers:  Quarterly digital quality scorecard
                            Governance maturity progression tracking
                            Drift alerts between scheduled reviews
   Cost:           $4K/month retainer
   HS dependency:  Aidbox and/or Termbox licensing — plan has completed
                   HIPAA BAA and SOC2 review, contract in place
   PHI exposure:   Managed under HS BAA — plan controls their own instance
-  Who can remediate: Plan internal, Indicina, or HS staff per plan's choice
+  Who can remediate: Plan internal, Sonian, or HS staff per plan's choice
 
 RUNG 4 — Full PHI Operational Mode (Path C — target state)
   What changes:   No PHI redaction step. Bulk FHIR extract loads
@@ -93,7 +93,7 @@ RUNG 4 — Full PHI Operational Mode (Path C — target state)
                   gate for real production operations, not assessment.
                   AuditEvent metadata is permanent production lineage
                   from day one — not a sandbox artifact.
-  What Indicina delivers:  Ongoing UC2 monitoring against plan's
+  What Sonian delivers:  Ongoing UC2 monitoring against plan's
                            live Aidbox instance. Quarterly scorecard,
                            drift detection, maturity progression.
                            Assessment queries run on scheduled cadence.
@@ -101,17 +101,17 @@ RUNG 4 — Full PHI Operational Mode (Path C — target state)
   HS dependency:  Plan has completed HIPAA BAA + SOC2 review.
                   Aidbox contracted and in production.
   PHI exposure:   Plan-owned Aidbox under plan's own BAA.
-                  Indicina accesses via governed query interface only.
-  Who can remediate: Plan internal, Indicina, or HS staff per plan's choice
+                  Sonian accesses via governed query interface only.
+  Who can remediate: Plan internal, Sonian, or HS staff per plan's choice
   
   This is the destination the entire ladder is designed to reach.
   The plan's FHIR infrastructure is now plan-controlled, lineage
   is native and continuous, measure runs have no per-run vendor
-  cost, and Indicina provides independent ongoing validation
+  cost, and Sonian provides independent ongoing validation
   rather than a one-time assessment.
 ```
 
-**The due diligence window is productive time, not dead time.** While the plan's security team reviews HS HIPAA attestations and SOC2 Type II report, Indicina is running Rung 1 and Rung 2 work. By the time compliance clearance arrives, the plan already has a full findings report, a remediation roadmap, and a governance maturity baseline. The HS contract unlocks the next layer — it is not the starting gate.
+**The due diligence window is productive time, not dead time.** While the plan's security team reviews HS HIPAA attestations and SOC2 Type II report, Sonian is running Rung 1 and Rung 2 work. By the time compliance clearance arrives, the plan already has a full findings report, a remediation roadmap, and a governance maturity baseline. The HS contract unlocks the next layer — it is not the starting gate.
 
 **The Velox boundary on this ladder:** Velox operates on the plan-side business user layer and does not require PHI access. Velox can be introduced at Rung 2 or Rung 3 without waiting for Rung 4 full infrastructure — the Velox dashboard consumes findings outputs and quality scorecard data, not raw FHIR. The Rung 1 offline validation kit is embeddable in Velox's onboarding workflow as a complementary capability.
 
@@ -134,13 +134,13 @@ RUNG 4 — Full PHI Operational Mode (Path C — target state)
 **Engagement structure:**
 - Client provides feed manifest (engagement kickoff) declaring all source system feeds
 - Client provides anonymized Bulk FHIR export (ndjson via `$export`) + VSD access (Mode 1, 2, or 3)
-- Client runs Indicina-provided conformance testing kit on own infrastructure — PHI never leaves client environment:
+- Client runs Sonian-provided conformance testing kit on own infrastructure — PHI never leaves client environment:
   - Stage 1: Bulk FHIR API conformance (live server test)
   - Stage 2: ndjson structural conformance testing
   - Stage 3a: Base FHIR R4 (v4.0.1) structural conformance testing
   - Stage 3: US Core 6.1.0 profile conformance
-- Anonymized extract + three conformance reports delivered to Indicina
-- Indicina loads to Aidbox sandbox with AuditEvent + seven extension metadata fields generated atomically
+- Anonymized extract + three conformance reports delivered to Sonian
+- Sonian loads to Aidbox sandbox with AuditEvent + seven extension metadata fields generated atomically
 - Level 6 governance assessment via structured interviews and documentation review
 - Findings report and roadmap delivered
 
@@ -167,7 +167,7 @@ PIQI framework dimensions map directly to Domain 5 procedures: Usability → 834
 
 ## UC2 — Digital Quality Data Operations Monitoring
 
-**What it is:** A recurring subscription service providing continuous DQAR conformance monitoring against the plan's FHIR pipeline. Runs Track A Levels 1–3 on a scheduled cadence, reassesses Level 6 governance maturity every six months, produces quarterly findings scorecard with drift detection and trending. Indicina sells the conformance testing methodology and monitoring cadence — the plan owns the terminology data and pipeline infrastructure.
+**What it is:** A recurring subscription service providing continuous DQAR conformance monitoring against the plan's FHIR pipeline. Runs Track A Levels 1–3 on a scheduled cadence, reassesses Level 6 governance maturity every six months, produces quarterly findings scorecard with drift detection and trending. Sonian sells the conformance testing methodology and monitoring cadence — the plan owns the terminology data and pipeline infrastructure.
 
 **Pitch:** *"Data quality is continuous. The audit is annual. By the time audit season reveals a value set drift or semantic failure, the problem has been affecting your rates for months. Continuous monitoring catches it in real time — and tracks your governance maturity improvement toward MP2029 readiness."*
 
@@ -185,7 +185,7 @@ PIQI framework dimensions map directly to Domain 5 procedures: Usability → 834
 - Anomaly alerts between scheduled reviews (Level 5 population coherence failures)
 - Annual VSD refresh validation at measurement period rollover
 
-**VSD model:** Client holds the NCQA license. Indicina holds the conformance test suite and monitoring methodology. Client runs Termbox instance or provides annual VSD export per SOW.
+**VSD model:** Client holds the NCQA license. Sonian holds the conformance test suite and monitoring methodology. Client runs Termbox instance or provides annual VSD export per SOW.
 
 **Monitoring cadence:**
 - Track A Levels 1–3: monthly automated conformance run
@@ -197,7 +197,7 @@ PIQI framework dimensions map directly to Domain 5 procedures: Usability → 834
 
 **Revenue model:** Annual subscription. Most defensible recurring revenue — VSD changes every year, monitoring need is continuous, maturity improvement is multi-year. Requires prior UC1 engagement as baseline.
 
-**Health Samurai role:** Termbox as client-hosted or Indicina-sandbox terminology server. Aidbox for any in-engagement data loading.
+**Health Samurai role:** Termbox as client-hosted or Sonian-sandbox terminology server. Aidbox for any in-engagement data loading.
 
 ---
 
@@ -329,26 +329,26 @@ Grouping incoming resources by `source-feed-id` (AuditEvent extension) and detec
 
 ### The Three-Phase Model
 
-**Phase 1 — Assessment (Indicina-led)**
-Fixed-fee. Vendor-neutral. DQAR framework applied. Three-tier findings report with semantic level breakdown, version-aware conformance classification (UC3), and DAMA-DMBOK-anchored governance maturity scores. No partner products required at this phase. Indicina provides the validation services the plan does not have internal bandwidth to perform.
+**Phase 1 — Assessment (Sonian-led)**
+Fixed-fee. Vendor-neutral. DQAR framework applied. Three-tier findings report with semantic level breakdown, version-aware conformance classification (UC3), and DAMA-DMBOK-anchored governance maturity scores. No partner products required at this phase. Sonian provides the validation services the plan does not have internal bandwidth to perform.
 
-**Phase 2 — Roadmap (Indicina-led)**
+**Phase 2 — Roadmap (Sonian-led)**
 Prioritized implementation roadmap sequenced against MP2026/MP2029 (UC1) or Jan 1 2027 (UC3). Partner products named — Aidbox, Termbox, Velox — with specific gap-to-solution mapping. Remediation path left to the plan's discretion.
 
 **Phase 3 — Remediation (plan's choice of path)**
 Three options — the plan chooses based on internal capacity and urgency:
 
-| Path | Who does the work | Indicina role |
+| Path | Who does the work | Sonian role |
 |---|---|---|
 | Internal staff | Plan's own engineering and informatics teams | Findings report + roadmap; available for advisory questions |
-| Indicina staff | Indicina provides hands-on remediation advisory and implementation oversight | Active engagement; validates that each fix closes the finding |
+| Sonian staff | Sonian provides hands-on remediation advisory and implementation oversight | Active engagement; validates that each fix closes the finding |
 | Health Samurai staff | Health Samurai implements FHIR infrastructure gaps (Aidbox, Termbox, Interbox) | Independent validation that remediation closes the finding; ongoing advisory |
 
-All three paths are compatible with the $4K/month retainer — the retainer funds Indicina's ongoing validation role regardless of who does the implementation work.
+All three paths are compatible with the $4K/month retainer — the retainer funds Sonian's ongoing validation role regardless of who does the implementation work.
 
 ### Revenue Progression
 
-| Phase | Indicina revenue | Health Samurai revenue | Velox revenue |
+| Phase | Sonian revenue | Health Samurai revenue | Velox revenue |
 |---|---|---|---|
 | UC1 Assessment | Fixed-fee | None | None |
 | UC1 Roadmap | Fixed-fee | None | None |
@@ -357,11 +357,11 @@ All three paths are compatible with the $4K/month retainer — the retainer fund
 | UC3 Assessment | Fixed-fee | None | None |
 | UC3 → UC2 Monitoring | $4K/month retainer | Aidbox + Termbox subscription | Feed lineage tooling |
 
-**Ongoing retainer model ($4,000/month):** Assessment is not a one-time event. After the initial findings report, the retainer covers continuous monitoring, VSD refresh advisory, governance maturity progression tracking, implementation oversight, and access to Indicina's expert network and partner best practices. The retainer is the mechanism by which the Health Samurai and Velox relationships deepen over time — each quarter introduces additional platform capabilities as the plan's remediation matures.
+**Ongoing retainer model ($4,000/month):** Assessment is not a one-time event. After the initial findings report, the retainer covers continuous monitoring, VSD refresh advisory, governance maturity progression tracking, implementation oversight, and access to Sonian's expert network and partner best practices. The retainer is the mechanism by which the Health Samurai and Velox relationships deepen over time — each quarter introduces additional platform capabilities as the plan's remediation matures.
 
 ### Assessment Objectivity — The Commercial Logic
 
-Indicina is an audit readiness assessor and consultant — not a certified NCQA auditor. This distinction matters commercially: Indicina is not constrained by auditor independence rules, and can assess, advise on remediation, oversee implementation, and monitor continuously with the same client across multiple years. This is the foundation of the $4K/month ongoing engagement model.
+Sonian is an audit readiness assessor and consultant — not a certified NCQA auditor. This distinction matters commercially: Sonian is not constrained by auditor independence rules, and can assess, advise on remediation, oversee implementation, and monitor continuously with the same client across multiple years. This is the foundation of the $4K/month ongoing engagement model.
 
 Assessment objectivity is preserved through structure, not role prohibition:
 
@@ -369,7 +369,7 @@ Assessment objectivity is preserved through structure, not role prohibition:
 2. **Partner products are named in the roadmap phase** after findings are documented, with specific gap-to-solution mapping. Health Samurai products are recommended where they are the right fit — not as a default.
 3. **Transparency with clients.** Health Samurai is a preferred FHIR infrastructure partner. Velox is a prospective partner for plan-side business user tooling and lineage. Clients know this. The assessment findings are independently defensible regardless of which implementation path the plan chooses.
 
-The goal is a growing partner ecosystem — Health Samurai for FHIR infrastructure and data engineering, Velox for plan-side business user platforms — where Indicina's assessment credibility creates qualified implementation referrals, and partner relationships deepen the engagement surface for clients.
+The goal is a growing partner ecosystem — Health Samurai for FHIR infrastructure and data engineering, Velox for plan-side business user platforms — where Sonian's assessment credibility creates qualified implementation referrals, and partner relationships deepen the engagement surface for clients.
 
 ---
 

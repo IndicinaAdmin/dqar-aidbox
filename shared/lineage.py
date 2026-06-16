@@ -48,7 +48,7 @@ def emit_run_event(event_type: str, run_id: str, job_name: str,
             }
         },
         "job": {
-            "namespace": "indicina.dqar",
+            "namespace": "sonian.dqar",
             "name": job_name,
         },
         "inputs": inputs,

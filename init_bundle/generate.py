@@ -74,7 +74,7 @@ def build_bundle(viewdefs: list, ext_defs: dict) -> dict:
     for ext in ext_defs.get("extensions", []):
         sd = {
             "resourceType": "StructureDefinition",
-            "id": f"indicina-{ext['id'].lower()}",
+            "id": f"sonian-{ext['id'].lower()}",
             "url": ext["url"],
             "name": f"DQAR{ext['id']}",
             "status": "active",
@@ -97,7 +97,7 @@ def build_bundle(viewdefs: list, ext_defs: dict) -> dict:
             "resource": sd,
             "request": {
                 "method": "PUT",
-                "url": f"StructureDefinition/indicina-{ext['id'].lower()}"
+                "url": f"StructureDefinition/sonian-{ext['id'].lower()}"
             }
         })
 
@@ -106,7 +106,7 @@ def build_bundle(viewdefs: list, ext_defs: dict) -> dict:
         "type": "transaction",
         "meta": {
             "tag": [{
-                "system": "http://indicina.com/fhir/tags",
+                "system": "http://Sonian.io/fhir/tags",
                 "code": "init-bundle",
                 "display": f"Generated {datetime.now(timezone.utc).isoformat()} from dqar-contracts"
             }]

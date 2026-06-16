@@ -10,13 +10,13 @@ This document specifies the technical architecture for the UC1 Digital Measure R
 
 **Framework linkage:** This app implements UC1 of the DQAR use case index (`dqar-03-use-case-index.md`). The full DQAR framework, six audit domains, three-tier findings structure, regulatory timeline, and partner guides live in the DQAR Shared KB project. This application does not implement the full framework — it implements the technical pipeline that powers UC1 assessment engagements.
 
-**Partners:** Health Samurai (Aidbox + Termbox), Indicina (pipeline, query library, findings report)
+**Partners:** Health Samurai (Aidbox + Termbox), Sonian (pipeline, query library, findings report)
 
 ---
 
 ## Architecture Summary
 
-The pipeline has six stages. Stage 1 (with substages 1a–1c) executes entirely in the client environment against PHI-containing data. Stage 2 (PHI redaction) is optional and client-initiated. Stages 3–6 execute in the Indicina or plan-owned Aidbox environment.
+The pipeline has six stages. Stage 1 (with substages 1a–1c) executes entirely in the client environment against PHI-containing data. Stage 2 (PHI redaction) is optional and client-initiated. Stages 3–6 execute in the Sonian or plan-owned Aidbox environment.
 
 ```
 CLIENT ENVIRONMENT (PHI present)
@@ -52,13 +52,13 @@ CLIENT ENVIRONMENT (PHI present)
   → Client decision point — three paths forward:
 
   PATH A — Stop here (no data leaves the plan)
-            Act on findings using internal staff or Indicina advisory.
+            Act on findings using internal staff or Sonian advisory.
             No sandbox, no PHI redaction, no vendor contracts needed.
             Full value from Stage 1 findings at Rung 1.
 
   PATH B — Proceed to sandbox (anonymized extract only)
             Client runs Stage 2 PHI redaction locally, sends
-            anonymized extract to Indicina Aidbox sandbox.
+            anonymized extract to Sonian Aidbox sandbox.
             Deeper validation: Termbox VSD conformance, AuditEvent
             metadata, SQL on FHIR queries, full three-tier findings
             report. No PHI crosses the boundary.
@@ -77,14 +77,14 @@ CLIENT ENVIRONMENT (PHI present)
             Client runs local redaction against the Bulk FHIR extract.
             Produces anonymized ndjson — no member-identifiable fields.
             Not required for Path A or Path C.
-            Output: anonymized extract ready for Indicina delivery.
+            Output: anonymized extract ready for Sonian delivery.
 
 PHI BOUNDARY — PATH B ONLY
-  Anonymized extract + Stage 1 reports cross to Indicina.
+  Anonymized extract + Stage 1 reports cross to Sonian.
   Path C bypasses this boundary entirely — PHI loads directly
   to the plan's own contracted Aidbox instance.
 
-INDICINA ENVIRONMENT — PATH B (anonymized sandbox)
+SONIAN ENVIRONMENT — PATH B (anonymized sandbox)
 
   Stage 3:  Load to Aidbox sandbox
             (a) Re-run Stage 1b + 1c conformance testing on anonymized extract
@@ -115,7 +115,7 @@ PLAN'S OWN AIDBOX INSTANCE — PATH C (full PHI operational mode)
             AuditEvent metadata is permanent production lineage.
 
   Stage 4+: Ongoing UC2 monitoring cadence applies.
-            Indicina runs assessment queries against plan's Aidbox
+            Sonian runs assessment queries against plan's Aidbox
             on scheduled cadence under $4K/month retainer.
 ```
 
@@ -125,7 +125,7 @@ PLAN'S OWN AIDBOX INSTANCE — PATH C (full PHI operational mode)
 
 ### Deliverable to client at engagement kickoff
 
-Indicina provides a conformance testing kit the client's IT team runs on their own infrastructure against raw PHI-containing ndjson. No PHI leaves the client environment. The kit produces three JSON reports and three PDF renders. The client decides independently whether to proceed to the optional PHI redaction (Stage 2) and Indicina sandbox (Stage 3) stages.
+Sonian provides a conformance testing kit the client's IT team runs on their own infrastructure against raw PHI-containing ndjson. No PHI leaves the client environment. The kit produces three JSON reports and three PDF renders. The client decides independently whether to proceed to the optional PHI redaction (Stage 2) and Sonian sandbox (Stage 3) stages.
 
 The kit supports two validator backends for Stages 1b and 1c:
 - **HAPI Validator CLI** — default, no vendor contract required, runs anywhere Java is available (Rung 1 and Rung 2)
@@ -170,7 +170,7 @@ Both produce identical output files:
 
 For `--backend hapi-cli`, sub-passes run sequentially via the HAPI Validator CLI JAR (set `FHIR_VALIDATOR_JAR` env var or pass `--validator-jar`). For `--backend aidbox`, each resource is POSTed to `{base_url}/fhir/{ResourceType}/$validate` and OperationOutcome issues are classified into 1c-i (base FHIR R4) or 1c-ii (US Core) based on whether a US Core profile URL appears in the issue diagnostics. The `--engagement` argument must be a path to an engagement config JSON when using `--backend aidbox`.
 
-### Conformance report format (delivered to Indicina — no PHI)
+### Conformance report format (delivered to Sonian — no PHI)
 
 ```json
 {
@@ -293,7 +293,7 @@ Three modes for VSD access (client determines which applies):
 
 | Mode | Description | BAA required |
 |---|---|---|
-| 1 — API reference | Client's Termbox instance, Indicina read-only API key | No (read-only access) |
+| 1 — API reference | Client's Termbox instance, Sonian read-only API key | No (read-only access) |
 | 2 — Client export | Client-provided VSD export loaded to sandbox, deleted at close | SOW clause required |
 | 3 — JSON from dQM package | FHIR ValueSet resources from client's NCQA DCS package | No additional license |
 
@@ -301,14 +301,14 @@ Three modes for VSD access (client determines which applies):
 
 ## AuditEvent Extension Metadata (Seven Fields)
 
-Generated by the Indicina ingest pipeline at Stage 3 load time. Not sourced from the client's FHIR server.
+Generated by the Sonian ingest pipeline at Stage 3 load time. Not sourced from the client's FHIR server.
 
 ### Extension definitions
 
 ```json
 [
   {
-    "url": "http://indicina.com/fhir/ext/source-type",
+    "url": "http://Sonian.io/fhir/ext/source-type",
     "valueType": "valueCode",
     "vocabulary": {
       "tier_a": ["clinical_ehr", "administrative_claims", "administrative_encounter", "pharmacy_pbm", "clinical_lab", "payer_exchange", "clinical_immunization_registry"],
@@ -320,44 +320,44 @@ Generated by the Indicina ingest pipeline at Stage 3 load time. Not sourced from
     "purpose": "Expanded 13-value vocabulary. Tier A structurally detectable; Tier B requires feed manifest or meta.source. Classifies originating source system type. Study Type 2 lineage analysis."
   },
   {
-    "url": "http://indicina.com/fhir/ext/source-system-id",
+    "url": "http://Sonian.io/fhir/ext/source-system-id",
     "valueType": "valueString",
     "format": "feed-id from manifest | SHA256(meta.source)[:12] | topology-cluster-{hash} | unknown-{pipeline-id}-{resource-type}",
     "purpose": "Pseudonymized source system instance ID. Consistent across all resources from same source."
   },
   {
-    "url": "http://indicina.com/fhir/ext/ingest-pipeline-id",
+    "url": "http://Sonian.io/fhir/ext/ingest-pipeline-id",
     "valueType": "valueString",
     "format": "{pipeline-run-id}/{feed-id}/{batch-id}",
     "example": "dqar-20251014-001/epic-prod-org447/Condition.ndjson-chunk-003",
     "purpose": "Three-level traceability: run / feed / batch. Enables feed-level quality analysis."
   },
   {
-    "url": "http://indicina.com/fhir/ext/source-feed-id",
+    "url": "http://Sonian.io/fhir/ext/source-feed-id",
     "valueType": "valueString",
     "format": "feed_id from manifest | derived from meta.source | topology-cluster-{hash} | unknown",
     "example": "epic-prod-org447",
     "purpose": "Feed-level identifier independent of full pipeline composite. Primary key for feed-level findings queries."
   },
   {
-    "url": "http://indicina.com/fhir/ext/source-inference-confidence",
+    "url": "http://Sonian.io/fhir/ext/source-inference-confidence",
     "valueType": "valueCode",
     "vocabulary": ["asserted", "high", "medium", "low", "unknown"],
     "purpose": "Confidence tier for source-type inference. Proportion at each tier is a direct provenance maturity metric."
   },
   {
-    "url": "http://indicina.com/fhir/ext/ecds-ssor",
+    "url": "http://Sonian.io/fhir/ext/ecds-ssor",
     "valueType": "valueCode",
     "vocabulary": ["EHR/PHR", "Administrative", "Clinical Registry/HIE", "Case/Disease Mgmt"],
     "mapping": "Derived from source-type via SSoR mapping rule in dqar-05-source-inference-algorithm.md",
     "purpose": "NCQA ECDS Source of Record (SSoR) category. Four-value NCQA vocabulary. Null when source-type = unknown — triggers Tier 1 governance finding. Enables SSoR distribution reporting across the extract."
   },
   {
-    "url": "http://indicina.com/fhir/ext/ol-run-id",
+    "url": "http://Sonian.io/fhir/ext/ol-run-id",
     "valueType": "valueString",
     "format": "UUID v4 (OpenLineage runId)",
     "example": "550e8400-e29b-41d4-a716-446655440000",
-    "purpose": "OpenLineage run ID of the ingest job that wrote this resource. Creates a bidirectional join between the AuditEvent and the OpenLineage lineage graph (Marquez/OpenMetadata). Enables mechanical execution of DQAR lineage studies — from AuditEvent walk upstream through field-level transformation facets; from OpenLineage graph walk downstream to MeasureReport references. Required for Level 3+ maturity on the DQAR provenance rubric."
+    "purpose": "Ingest batch tag (OpenLineage runId, UUID v4) stamped on every AuditEvent written during a run — not a join key into a lineage graph. OpenLineage RunEvents are emitted directly to OpenMetadata (Marquez has been dropped); OpenMetadata builds the lineage graph from each RunEvent's declared inputs/outputs. Enables mechanical execution of DQAR lineage studies — from AuditEvent walk upstream through field-level transformation facets; from OpenLineage graph walk downstream to MeasureReport references. Required for Level 3+ maturity on the DQAR provenance rubric."
   }
 ]
 ```
@@ -381,16 +381,16 @@ Seven extension fields: EXT 1 source-type · EXT 2 source-system-id · EXT 3 sou
         "type": { "system": "http://terminology.hl7.org/CodeSystem/audit-event-type", "code": "rest" },
         "recorded": "2025-10-14T09:22:00Z",
         "agent": [{ "requestor": true, "who": { "display": "dqar-ingest-pipeline" } }],
-        "source": { "observer": { "display": "Indicina DQAR Sandbox" } },
+        "source": { "observer": { "display": "Sonian DQAR Sandbox" } },
         "entity": [{ "what": { "reference": "Condition/pat-abc123-cond-001" } }],
         "extension": [
-          { "url": "http://indicina.com/fhir/ext/source-type", "valueCode": "clinical_ehr" },
-          { "url": "http://indicina.com/fhir/ext/source-system-id", "valueString": "epic-prod-org447" },
-          { "url": "http://indicina.com/fhir/ext/ingest-pipeline-id", "valueString": "dqar-20251014-001/epic-prod-org447/Condition.ndjson-chunk-003" },
-          { "url": "http://indicina.com/fhir/ext/source-feed-id", "valueString": "epic-prod-org447" },
-          { "url": "http://indicina.com/fhir/ext/source-inference-confidence", "valueCode": "asserted" },
-          { "url": "http://indicina.com/fhir/ext/ecds-ssor", "valueCode": "EHR/PHR" },
-          { "url": "http://indicina.com/fhir/ext/ol-run-id", "valueString": "550e8400-e29b-41d4-a716-446655440000" }
+          { "url": "http://Sonian.io/fhir/ext/source-type", "valueCode": "clinical_ehr" },
+          { "url": "http://Sonian.io/fhir/ext/source-system-id", "valueString": "epic-prod-org447" },
+          { "url": "http://Sonian.io/fhir/ext/ingest-pipeline-id", "valueString": "dqar-20251014-001/epic-prod-org447/Condition.ndjson-chunk-003" },
+          { "url": "http://Sonian.io/fhir/ext/source-feed-id", "valueString": "epic-prod-org447" },
+          { "url": "http://Sonian.io/fhir/ext/source-inference-confidence", "valueCode": "asserted" },
+          { "url": "http://Sonian.io/fhir/ext/ecds-ssor", "valueCode": "EHR/PHR" },
+          { "url": "http://Sonian.io/fhir/ext/ol-run-id", "valueString": "550e8400-e29b-41d4-a716-446655440000" }
         ]
       },
       "request": { "method": "POST", "url": "AuditEvent" }
@@ -447,7 +447,7 @@ Five priority measures for UC1 MVP. Each measure has four query types: denominat
 
 ```sql
 -- HEDIS VSD lookup function (Aidbox PostgreSQL)
--- Requires VSD loaded via Indicina VSD loader
+-- Requires VSD loaded via Sonian VSD loader
 CREATE OR REPLACE FUNCTION hedis_validate_code(
   p_code TEXT,
   p_system TEXT,
@@ -489,12 +489,12 @@ RETURNS TABLE (
   CROSS JOIN LATERAL jsonb_array_elements(ae.resource->'extension') ext_conf
   CROSS JOIN LATERAL jsonb_array_elements(ae.resource->'extension') ext_ol
   WHERE ae.resource #>> '{entity,0,what,reference}' = p_resource_ref
-  AND ext_src.value->>'url'  = 'http://indicina.com/fhir/ext/source-type'
-  AND ext_feed.value->>'url' = 'http://indicina.com/fhir/ext/source-feed-id'
-  AND ext_ssor.value->>'url' = 'http://indicina.com/fhir/ext/ecds-ssor'
-  AND ext_pip.value->>'url'  = 'http://indicina.com/fhir/ext/ingest-pipeline-id'
-  AND ext_conf.value->>'url' = 'http://indicina.com/fhir/ext/source-inference-confidence'
-  AND ext_ol.value->>'url'   = 'http://indicina.com/fhir/ext/ol-run-id'
+  AND ext_src.value->>'url'  = 'http://Sonian.io/fhir/ext/source-type'
+  AND ext_feed.value->>'url' = 'http://Sonian.io/fhir/ext/source-feed-id'
+  AND ext_ssor.value->>'url' = 'http://Sonian.io/fhir/ext/ecds-ssor'
+  AND ext_pip.value->>'url'  = 'http://Sonian.io/fhir/ext/ingest-pipeline-id'
+  AND ext_conf.value->>'url' = 'http://Sonian.io/fhir/ext/source-inference-confidence'
+  AND ext_ol.value->>'url'   = 'http://Sonian.io/fhir/ext/ol-run-id'
   LIMIT 1;
 $$ LANGUAGE SQL;
 ```
@@ -594,7 +594,7 @@ Full query implementations: `queries/level3/` directory in the UC1 app repo.
 
 **Validator backend is a deliberate ladder design decision.** HAPI is the default because it requires no Health Samurai contract, no HIPAA review, no procurement — the client runs it on their own infrastructure with no external dependencies beyond a Java runtime. When the plan advances to Rung 3 and has Aidbox in production, the conformance testing backend switches to Aidbox native conformance testing, which provides richer error metadata, write-time conformance testing rather than post-hoc, and consistent behaviour between the client kit and the sandbox. The reports are structurally identical regardless of backend — the findings format does not change.
 
-### Indicina sandbox (Stages 3–5, runs on Indicina/Health Samurai infrastructure)
+### Sonian sandbox (Stages 3–5, runs on Sonian/Health Samurai infrastructure)
 
 | Component | Technology | Version |
 |---|---|---|
@@ -611,7 +611,7 @@ Full query implementations: `queries/level3/` directory in the UC1 app repo.
 
 ## Open Items — Confirm Before Build
 
-1. **NCQA dQM license for SQL query derivation** — confirm whether building SQL on FHIR queries from Vol. 2 narrative specifications (Indicina-held license) requires separate authorization for consulting use, or whether deriving queries from dQM CQL packages requires a custom NCQA license. Path 2 (Vol. 2 derivation) is the safe default.
+1. **NCQA dQM license for SQL query derivation** — confirm whether building SQL on FHIR queries from Vol. 2 narrative specifications (Sonian-held license) requires separate authorization for consulting use, or whether deriving queries from dQM CQL packages requires a custom NCQA license. Path 2 (Vol. 2 derivation) is the safe default.
 
 2. **Aidbox US Core 6.1.0 profile validation on write** — confirm with Health Samurai that Aidbox supports US Core 6.1.0 profile validation at write time (not just at query time). Confirm whether auto-Provenance generation on ingest is configurable.
 

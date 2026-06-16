@@ -32,7 +32,7 @@ Before selecting studies, you must map the plan's complete HEDIS data inventory.
 
 **Lineage graph construction:**
 
-If the plan has OpenLineage, Velox, dbt lineage, or equivalent — extract the lineage graph directly. This is the ideal case: the graph exists, Indicina queries it, the inventory is machine-readable.
+If the plan has OpenLineage, Velox, dbt lineage, or equivalent — extract the lineage graph directly. This is the ideal case: the graph exists, Sonian queries it, the inventory is machine-readable.
 
 If no lineage tool exists — construct the inventory manually from system documentation, ETL code review, and staff interviews. Document the absence of lineage tooling as a Level 6 governance finding (metadata management maturity = 1).
 
@@ -93,14 +93,14 @@ FROM auditEvent ae
   CROSS JOIN LATERAL jsonb_array_elements(ae.resource->'extension') ae_ext_sys
   CROSS JOIN LATERAL jsonb_array_elements(ae.resource->'extension') ae_ext_src
   CROSS JOIN LATERAL jsonb_array_elements(ae.resource->'extension') ae_ext_ssor
-WHERE ae_ext_sys.value->>'url'  = 'http://indicina.com/fhir/ext/source-system-id'
-  AND ae_ext_src.value->>'url'  = 'http://indicina.com/fhir/ext/source-type'
-  AND ae_ext_ssor.value->>'url' = 'http://indicina.com/fhir/ext/ecds-ssor'
+WHERE ae_ext_sys.value->>'url'  = 'http://Sonian.io/fhir/ext/source-system-id'
+  AND ae_ext_src.value->>'url'  = 'http://Sonian.io/fhir/ext/source-type'
+  AND ae_ext_ssor.value->>'url' = 'http://Sonian.io/fhir/ext/ecds-ssor'
 GROUP BY 1, 2, 3, 4
 ORDER BY resource_count DESC;
 ```
 
-This query produces the risk stratification matrix automatically from the ingest metadata. Plans with no AuditEvent metadata must reconstruct this manually from ETL documentation — expensive, error-prone, and a Level 6 governance finding in its own right. The Aidbox solution converts a multi-day manual exercise into a sub-minute query. This is a direct, concrete demonstration of the value of the Indicina/Health Samurai infrastructure over an incumbent HEDIS vendor that does not expose this metadata to the plan.
+This query produces the risk stratification matrix automatically from the ingest metadata. Plans with no AuditEvent metadata must reconstruct this manually from ETL documentation — expensive, error-prone, and a Level 6 governance finding in its own right. The Aidbox solution converts a multi-day manual exercise into a sub-minute query. This is a direct, concrete demonstration of the value of the Sonian/Health Samurai infrastructure over an incumbent HEDIS vendor that does not expose this metadata to the plan.
 
 **Risk dimension 2 — Lineage confidence**
 How well-documented and validated is this path? A path with full dbt lineage, automated testing, and recent validation has high confidence. A path that is undocumented, manually maintained, or last validated two years ago has low confidence.
@@ -302,13 +302,13 @@ Velox (or equivalent: OpenLineage/Marquez, dbt lineage, Apache Atlas) is the too
 
 **Velox in the engagement model:**
 
-Assessment phase: Indicina queries the client's Velox (or OpenLineage) graph to extract the lineage inventory. Where Velox coverage is incomplete, document the gap and supplement with manual inventory.
+Assessment phase: Sonian queries the client's Velox (or OpenLineage) graph to extract the lineage inventory. Where Velox coverage is incomplete, document the gap and supplement with manual inventory.
 
 Roadmap phase: Plans without lineage tooling receive a recommendation to implement Velox or OpenLineage as the highest-priority governance remediation — it's the enabler for everything else.
 
-Implementation phase: Velox implementation is a partner referral. Indicina specifies the lineage coverage requirements (which pipeline hops must be instrumented); the implementation vendor delivers.
+Implementation phase: Velox implementation is a partner referral. Sonian specifies the lineage coverage requirements (which pipeline hops must be instrumented); the implementation vendor delivers.
 
-**Important clarification:** As of June 2026, Velox is a prospective partner in the Indicina ecosystem, positioned as the plan-side business user platform complementary to Health Samurai's FHIR infrastructure. Velox Health Metadata (veloxhealthmetadata.com) and their 10-10-10 assessment process are the specific product and methodology under evaluation. The lineage tooling role — instrumenting feed-level provenance across the HEDIS pipeline — is a natural fit for the Velox partnership. Before naming Velox in client-facing materials, confirm: (1) specific product capabilities for feed-level lineage documentation, (2) formal partnership agreement status, (3) co-engagement model with Health Samurai. OpenLineage/Marquez remains the safe vendor-neutral reference in client deliverables until the Velox partnership is confirmed.
+**Important clarification:** As of June 2026, Velox is a prospective partner in the Sonian ecosystem, positioned as the plan-side business user platform complementary to Health Samurai's FHIR infrastructure. Velox Health Metadata (veloxhealthmetadata.com) and their 10-10-10 assessment process are the specific product and methodology under evaluation. The lineage tooling role — instrumenting feed-level provenance across the HEDIS pipeline — is a natural fit for the Velox partnership. Before naming Velox in client-facing materials, confirm: (1) specific product capabilities for feed-level lineage documentation, (2) formal partnership agreement status, (3) co-engagement model with Health Samurai. OpenLineage/Marquez remains the safe vendor-neutral reference in client deliverables until the Velox partnership is confirmed.
 
 ---
 
@@ -325,7 +325,7 @@ Checkpoint 1 — Plan's FHIR data store export (outbound)
   Finds:       What is the baseline quality of the plan's own FHIR data?
   Use case:    UC1 client validation kit — plan runs this themselves
 
-Checkpoint 2 — Post PHI redaction (pre-Indicina delivery)
+Checkpoint 2 — Post PHI redaction (pre-Sonian delivery)
   What runs:   stage1a preflight + stage1b ndjson + stage1c conformance testing
   Context:     Same extract after anonymization, before crossing PHI boundary
   Finds:       Did the PHI redaction process introduce structural errors?
@@ -341,7 +341,7 @@ Checkpoint 3 — P2P inbound endpoint (UC3 — data arriving from another payer)
                which have version gaps, which are clean
   Use case:    UC3 P2P exchange quality assessment
 
-Checkpoint 4 — Indicina Aidbox sandbox (post-ingest re-validation)
+Checkpoint 4 — Sonian Aidbox sandbox (post-ingest re-validation)
   What runs:   stage1b + stage1c re-run on Aidbox write
                + Termbox VSD conformance
                + AuditEvent seven-extension metadata (incl. ol-run-id → OpenLineage graph join)
@@ -358,7 +358,7 @@ Running the same validation at multiple checkpoints and comparing results produc
 
 | Delta | What it means | Finding owner |
 |---|---|---|
-| CP1 clean → CP2 errors | PHI redaction corrupted structure | Redaction pipeline — Indicina advisory |
+| CP1 clean → CP2 errors | PHI redaction corrupted structure | Redaction pipeline — Sonian advisory |
 | CP1 errors → CP3 same errors | Plan's own data quality problem carried into P2P | Plan remediation |
 | CP3 errors not in CP1 | Sending payer introduced the errors | Sending payer — raise data quality SLA |
 | CP3 pass 1+2 errors, pass 3 only | US Core version gap artifact | Receiving plan normalization required |
@@ -375,7 +375,7 @@ Each checkpoint does not need to validate the full extract. Differential samplin
 - Track by `resource.id` or `patient.id` — the consistent identifier across checkpoints
 - Where PHI redaction replaces patient IDs with tokens, maintain the CP1→CP2 mapping in the token vault
 
-**This is the auditor service Indicina provides that plans cannot perform themselves.** A plan's internal team can run the validation kit at CP1. They cannot independently run CP3 (they are the receiving plan — they need an independent assessor to evaluate what's arriving). They cannot run CP4 without the Indicina/Health Samurai infrastructure. And they cannot compute the differential across checkpoints without a consistent sampling framework and independent record-keeping.
+**This is the auditor service Sonian provides that plans cannot perform themselves.** A plan's internal team can run the validation kit at CP1. They cannot independently run CP3 (they are the receiving plan — they need an independent assessor to evaluate what's arriving). They cannot run CP4 without the Sonian/Health Samurai infrastructure. And they cannot compute the differential across checkpoints without a consistent sampling framework and independent record-keeping.
 
 ### Engagement Delivery Model
 

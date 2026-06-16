@@ -9,13 +9,13 @@
 When a client FHIR extract carries no `meta.source` URI and no Provenance resources, the UC1 ingest pipeline cannot directly read the originating source system type. This algorithm infers source-type and source-system-id from FHIR resource structure using signals that US Core 6.1.0 conformance requires to be present.
 
 **The inference result drives five AuditEvent extension fields (EXT 1–5):**
-- `http://indicina.com/fhir/ext/source-type` (EXT 1)
-- `http://indicina.com/fhir/ext/source-system-id` (EXT 2)
-- `http://indicina.com/fhir/ext/source-feed-id` (EXT 3)
-- `http://indicina.com/fhir/ext/source-inference-confidence` (EXT 4)
-- `http://indicina.com/fhir/ext/ecds-ssor` (EXT 5) ← derived from source-type via SSoR mapping rule
+- `http://Sonian.io/fhir/ext/source-type` (EXT 1)
+- `http://Sonian.io/fhir/ext/source-system-id` (EXT 2)
+- `http://Sonian.io/fhir/ext/source-feed-id` (EXT 3)
+- `http://Sonian.io/fhir/ext/source-inference-confidence` (EXT 4)
+- `http://Sonian.io/fhir/ext/ecds-ssor` (EXT 5) ← derived from source-type via SSoR mapping rule
 
-**EXT 6 (`ingest-pipeline-id`) and EXT 7 (`ol-run-id`) are set by the pipeline orchestrator at run time — not derived by this algorithm.** EXT 7 is the OpenLineage run ID UUID that links the AuditEvent to the lineage graph (Marquez/OpenMetadata); required for DQAR provenance maturity Level 3+.
+**EXT 6 (`ingest-pipeline-id`) and EXT 7 (`ol-run-id`) are set by the pipeline orchestrator at run time — not derived by this algorithm.** EXT 7 is an ingest batch tag (OpenLineage run ID UUID), not a join key — OpenLineage RunEvents go directly to OpenMetadata (Marquez dropped), which builds the lineage graph from each RunEvent's declared inputs/outputs; required for DQAR provenance maturity Level 3+.
 
 ---
 
@@ -567,11 +567,11 @@ CROSS JOIN LATERAL jsonb_array_elements(ae.resource->'extension') ext_conf
 CROSS JOIN LATERAL jsonb_array_elements(ae.resource->'extension') ext_src
 CROSS JOIN LATERAL jsonb_array_elements(ae.resource->'extension') ext_feed
 WHERE ext_conf.value->>'url' = 
-  'http://indicina.com/fhir/ext/source-inference-confidence'
+  'http://Sonian.io/fhir/ext/source-inference-confidence'
 AND ext_src.value->>'url' = 
-  'http://indicina.com/fhir/ext/source-type'
+  'http://Sonian.io/fhir/ext/source-type'
 AND ext_feed.value->>'url' = 
-  'http://indicina.com/fhir/ext/source-feed-id'
+  'http://Sonian.io/fhir/ext/source-feed-id'
 GROUP BY 1, 2, 3
 ORDER BY resource_count DESC;
 ```

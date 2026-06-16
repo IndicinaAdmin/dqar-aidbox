@@ -1,13 +1,13 @@
 # DQAR Bulk FHIR Extract Specification
-**Digital Quality Audit Readiness — Indicina**
+**Digital Quality Audit Readiness — Sonian**
 *Version 2.0 | June 2026 | Confidential — For Client Use Only*
-*mcampbell@indicina.com | indicina.com*
+*mcampbell@indicina.com | Sonian.io*
 
 ---
 
 ## 1. Purpose and Scope
 
-This document specifies the Bulk FHIR data extract Indicina requires from your organization to conduct a Digital Quality Audit Readiness (DQAR) assessment engagement. It defines which FHIR R4 resource types to export, the population scope and time window, the anonymization protocol required to protect member PHI, and the technical delivery format.
+This document specifies the Bulk FHIR data extract Sonian requires from your organization to conduct a Digital Quality Audit Readiness (DQAR) assessment engagement. It defines which FHIR R4 resource types to export, the population scope and time window, the anonymization protocol required to protect member PHI, and the technical delivery format.
 
 The extract supports semantic integrity assessment across use case domains depending on engagement scope:
 
@@ -17,13 +17,13 @@ The extract supports semantic integrity assessment across use case domains depen
 | UC2 | Digital Quality Data Operations Monitoring | Continuous DQAR conformance monitoring — drift detection, VSD currency, governance maturity progression |
 | UC3 | P2P Data Exchange Quality | Incoming payer-to-payer data semantic validity, completeness, and provenance assessment (CMS-0057-F) |
 
-Indicina will confirm the specific use cases in scope at engagement kickoff. This document covers the superset — organizations may provide a subset of resources if only specific use cases are in scope.
+Sonian will confirm the specific use cases in scope at engagement kickoff. This document covers the superset — organizations may provide a subset of resources if only specific use cases are in scope.
 
 ---
 
 ## 2. Important Notes Before You Begin
 
-> **🔒 PHI never enters Indicina's infrastructure.** All conformance testing (Stage 1a, 1b, 1c) executes within the client's own environment using Indicina-provided tooling. Only anonymized extracts and conformance reports cross the PHI boundary. No BAA is required for the assessment phase under this architecture.
+> **🔒 PHI never enters Sonian's infrastructure.** All conformance testing (Stage 1a, 1b, 1c) executes within the client's own environment using Sonian-provided tooling. Only anonymized extracts and conformance reports cross the PHI boundary. No BAA is required for the assessment phase under this architecture.
 
 > **⚠ The extract is used for gap identification and indicative rate calculation only.** SQL on FHIR queries produce diagnostic findings, not certified HEDIS rates. Your organization retains all reporting obligations under your NCQA license.
 
@@ -44,11 +44,11 @@ All resources in this extract must conform to the US Core Implementation Guide S
 | US Core 6.1.0 | USCDI v3 / v3.1 | CMS-0057-F required (2024) | **REQUIRED for this extract** |
 | US Core 7.0.0 | USCDI v5 | ONC SVAP voluntary adoption | Acceptable — forward-compatible |
 
-> **⚠** Plans on US Core 3.1.1 (original CMS-9115 implementation) should declare their version and provide their current extract. The version gap will be documented as a UC3 digital readiness finding with the Jan 1, 2027 CMS-0057-F compliance deadline attached. Indicina will assess against the available version and document the conformance delta.
+> **⚠** Plans on US Core 3.1.1 (original CMS-9115 implementation) should declare their version and provide their current extract. The version gap will be documented as a UC3 digital readiness finding with the Jan 1, 2027 CMS-0057-F compliance deadline attached. Sonian will assess against the available version and document the conformance delta.
 
 ### 2.2 Assessment Pipeline Architecture
 
-The extract flows through a six-stage pipeline. Stage 1 (with substages 1a, 1b, 1c) executes entirely within the client environment against PHI-containing data. Stage 2 (PHI redaction) is optional and client-initiated. Stages 3–5 execute in the Indicina or plan-owned Aidbox environment.
+The extract flows through a six-stage pipeline. Stage 1 (with substages 1a, 1b, 1c) executes entirely within the client environment against PHI-containing data. Stage 2 (PHI redaction) is optional and client-initiated. Stages 3–5 execute in the Sonian or plan-owned Aidbox environment.
 
 **The three Stage 1 substages test independent dimensions and run in sequence:**
 - **Stage 1a** tests the FHIR vendor server's `$export` API implementation against the Bulk Data Access IG — before any data moves.
@@ -92,9 +92,9 @@ Stage 1c  FHIR R4 + US Core conformance testing    [stage1c_fhir_uscore_validato
 → Client decision point — three paths forward:
 
   PATH A — Stop here. No data leaves the plan.
-            Act on findings using internal staff or Indicina advisory.
+            Act on findings using internal staff or Sonian advisory.
 
-  PATH B — Stage 2 PHI redaction locally, then send anonymized extract to Indicina sandbox.
+  PATH B — Stage 2 PHI redaction locally, then send anonymized extract to Sonian sandbox.
             No PHI crosses the boundary. Appropriate during HS HIPAA/SOC2 due diligence.
 
   PATH C — Full PHI loads directly to plan-owned Aidbox instance (post BAA).
@@ -106,10 +106,10 @@ Stage 2   PHI redaction + anonymization             [PATH B ONLY — client-init
           Not required for Path A or Path C.
 
 ─────────────────── PHI BOUNDARY (Path B only) ────────────────────
-Anonymized extract + Stage 1 reports cross to Indicina.
+Anonymized extract + Stage 1 reports cross to Sonian.
 Path C bypasses this boundary entirely.
 
-INDICINA / PLAN-OWNED AIDBOX ENVIRONMENT
+SONIAN / PLAN-OWNED AIDBOX ENVIRONMENT
 
 Stage 3   Load to Aidbox sandbox (Path B) or plan-owned Aidbox (Path C)
           Each resource and its AuditEvent posted as single atomic transaction.
@@ -145,7 +145,7 @@ Stage 5   Three-tier findings report generation
 | 3 (Termbox) | Terminology conformance failure — code not in required value set, stale VSD binding. Governance absence also a Tier 1 finding. | Tier 1/2 — Governance or measure data gap | Terminology governance function | Depends on governance maturity |
 | 4 (SQL on FHIR) | Semantic context failure — wrong encounter type, measurement window violation, exclusion misapplication | Tier 2 — Measure data gap | Clinical informatics — measure logic implementation | Weeks per measure |
 
-> **⚠ Why Stage 1 substages run in the client environment:** US Core 6.1.0 MUST SUPPORT elements include PHI-bearing fields (Patient.name, Patient.birthDate). Running conformance testing after redaction cannot distinguish 'field absent in client data' from 'field redacted by protocol' — findings would misrepresent the client's actual data quality. Running conformance testing in the client environment resolves this without requiring Indicina to handle PHI.
+> **⚠ Why Stage 1 substages run in the client environment:** US Core 6.1.0 MUST SUPPORT elements include PHI-bearing fields (Patient.name, Patient.birthDate). Running conformance testing after redaction cannot distinguish 'field absent in client data' from 'field redacted by protocol' — findings would misrepresent the client's actual data quality. Running conformance testing in the client environment resolves this without requiring Sonian to handle PHI.
 
 ### 2.3 Conformance Testing Backend — HAPI vs Aidbox
 
@@ -172,7 +172,7 @@ Both backends produce the same two output files and the same report schema. `"va
 
 ## 3. AuditEvent Extension Metadata — Generated at Stage 3
 
-AuditEvent resources in the DQAR assessment sandbox are generated by the Indicina ingestion pipeline at Stage 3 when each resource is loaded to Aidbox. Each AuditEvent is posted atomically with its associated clinical resource as a FHIR transaction bundle.
+AuditEvent resources in the DQAR assessment sandbox are generated by the Sonian ingestion pipeline at Stage 3 when each resource is loaded to Aidbox. Each AuditEvent is posted atomically with its associated clinical resource as a FHIR transaction bundle.
 
 The pipeline attaches **seven extension fields** to every AuditEvent it generates. Four fields are populated by the source-type inference algorithm (`dqar-05-source-inference-algorithm.md`). One field (`ingest-pipeline-id`) is set by the pipeline orchestrator. One field (`ecds-ssor`) is derived from `source-type` via deterministic SSoR mapping rule. One field (`ol-run-id`) is the OpenLineage run ID that links the AuditEvent to the lineage graph.
 
@@ -180,13 +180,13 @@ The pipeline attaches **seven extension fields** to every AuditEvent it generate
 
 | Extension URL | valueType | Example Value | Purpose / DQAR Use |
 |---|---|---|---|
-| `http://indicina.com/fhir/ext/source-type` (EXT 1) | valueCode | `clinical_ehr` | Expanded 13-value vocabulary. **Tier A** (structurally detectable): `clinical_ehr`, `administrative_claims`, `administrative_encounter`, `pharmacy_pbm`, `clinical_lab`, `payer_exchange`, `clinical_immunization_registry`. **Tier B** (manifest/meta.source only): `clinical_phr`, `pharmacy_specialty`, `clinical_hie`, `clinical_registry`, `case_management`, `disease_management`. Tier B resources defaulting to `unknown` are Tier 1 governance findings. |
-| `http://indicina.com/fhir/ext/source-system-id` (EXT 2) | valueString | `epic-prod-org-447` | Pseudonymized identifier of the specific source system instance. Consistent across all resources from same source. Enables Study Type 1 and 2 lineage tracing. |
-| `http://indicina.com/fhir/ext/source-feed-id` (EXT 3) | valueString | `epic-prod-org-447` | Feed-level identifier independent of full pipeline composite. Primary key for feed-level findings queries and risk stratification matrix. |
-| `http://indicina.com/fhir/ext/source-inference-confidence` (EXT 4) | valueCode | `asserted` | Confidence tier: `asserted` \| `high` \| `medium` \| `low` \| `unknown`. Confidence distribution across the extract is a direct provenance maturity metric and Tier 1 governance finding driver. |
-| `http://indicina.com/fhir/ext/ecds-ssor` (EXT 5) | valueCode | `EHR/PHR` | NCQA ECDS Source of Record (SSoR) category. Four-value vocabulary: `EHR/PHR` \| `Administrative` \| `Clinical Registry/HIE` \| `Case/Disease Mgmt`. Derived from source-type via deterministic SSoR mapping rule. `null` when source-type = `unknown` — triggers Tier 1 governance finding. |
-| `http://indicina.com/fhir/ext/ingest-pipeline-id` (EXT 6) | valueString | `dqar-20251014-001/epic-prod-org447/Condition.ndjson-chunk-003` | Three-level traceability: run / feed / batch. Enables batch-level error isolation without full re-scan. |
-| `http://indicina.com/fhir/ext/ol-run-id` (EXT 7) | valueString | `550e8400-e29b-41d4-a716-446655440000` | OpenLineage run ID (UUID v4) of the ingest job that wrote this resource. Creates a bidirectional join between the AuditEvent and the OpenLineage lineage graph (Marquez/OpenMetadata). Required for DQAR provenance maturity Level 3+. |
+| `http://Sonian.io/fhir/ext/source-type` (EXT 1) | valueCode | `clinical_ehr` | Expanded 13-value vocabulary. **Tier A** (structurally detectable): `clinical_ehr`, `administrative_claims`, `administrative_encounter`, `pharmacy_pbm`, `clinical_lab`, `payer_exchange`, `clinical_immunization_registry`. **Tier B** (manifest/meta.source only): `clinical_phr`, `pharmacy_specialty`, `clinical_hie`, `clinical_registry`, `case_management`, `disease_management`. Tier B resources defaulting to `unknown` are Tier 1 governance findings. |
+| `http://Sonian.io/fhir/ext/source-system-id` (EXT 2) | valueString | `epic-prod-org-447` | Pseudonymized identifier of the specific source system instance. Consistent across all resources from same source. Enables Study Type 1 and 2 lineage tracing. |
+| `http://Sonian.io/fhir/ext/source-feed-id` (EXT 3) | valueString | `epic-prod-org-447` | Feed-level identifier independent of full pipeline composite. Primary key for feed-level findings queries and risk stratification matrix. |
+| `http://Sonian.io/fhir/ext/source-inference-confidence` (EXT 4) | valueCode | `asserted` | Confidence tier: `asserted` \| `high` \| `medium` \| `low` \| `unknown`. Confidence distribution across the extract is a direct provenance maturity metric and Tier 1 governance finding driver. |
+| `http://Sonian.io/fhir/ext/ecds-ssor` (EXT 5) | valueCode | `EHR/PHR` | NCQA ECDS Source of Record (SSoR) category. Four-value vocabulary: `EHR/PHR` \| `Administrative` \| `Clinical Registry/HIE` \| `Case/Disease Mgmt`. Derived from source-type via deterministic SSoR mapping rule. `null` when source-type = `unknown` — triggers Tier 1 governance finding. |
+| `http://Sonian.io/fhir/ext/ingest-pipeline-id` (EXT 6) | valueString | `dqar-20251014-001/epic-prod-org447/Condition.ndjson-chunk-003` | Three-level traceability: run / feed / batch. Enables batch-level error isolation without full re-scan. |
+| `http://Sonian.io/fhir/ext/ol-run-id` (EXT 7) | valueString | `550e8400-e29b-41d4-a716-446655440000` | Ingest batch tag (UUID v4) stamped on every AuditEvent written during a run — not a join key into a lineage graph. OpenLineage RunEvents are emitted directly to OpenMetadata (Marquez has been dropped); OpenMetadata builds the lineage graph from each RunEvent's declared inputs/outputs. Required for DQAR provenance maturity Level 3+. |
 
 ### 3.2 Source-Type to SSoR Mapping
 
@@ -214,28 +214,28 @@ The pipeline attaches **seven extension fields** to every AuditEvent it generate
   "resourceType": "AuditEvent",
   "recorded": "2025-10-14T09:22:00Z",
   "agent": [{ "requestor": true, "who": { "display": "dqar-ingest-pipeline" } }],
-  "source": { "observer": { "display": "Indicina DQAR Sandbox" } },
+  "source": { "observer": { "display": "Sonian DQAR Sandbox" } },
   "entity": [{ "what": { "reference": "Condition/pat-abc123-cond-001" } }],
   "extension": [
-    { "url": "http://indicina.com/fhir/ext/source-type",
+    { "url": "http://Sonian.io/fhir/ext/source-type",
       "valueCode": "clinical_ehr" },                                    // EXT 1
-    { "url": "http://indicina.com/fhir/ext/source-system-id",
+    { "url": "http://Sonian.io/fhir/ext/source-system-id",
       "valueString": "epic-prod-org-447" },                             // EXT 2
-    { "url": "http://indicina.com/fhir/ext/source-feed-id",
+    { "url": "http://Sonian.io/fhir/ext/source-feed-id",
       "valueString": "epic-prod-org-447" },                             // EXT 3
-    { "url": "http://indicina.com/fhir/ext/source-inference-confidence",
+    { "url": "http://Sonian.io/fhir/ext/source-inference-confidence",
       "valueCode": "asserted" },                                        // EXT 4
-    { "url": "http://indicina.com/fhir/ext/ecds-ssor",
+    { "url": "http://Sonian.io/fhir/ext/ecds-ssor",
       "valueCode": "EHR/PHR" },                                         // EXT 5
-    { "url": "http://indicina.com/fhir/ext/ingest-pipeline-id",
+    { "url": "http://Sonian.io/fhir/ext/ingest-pipeline-id",
       "valueString": "dqar-20251014-001/epic-prod-org447/Condition.ndjson-chunk-003" }, // EXT 6
-    { "url": "http://indicina.com/fhir/ext/ol-run-id",
+    { "url": "http://Sonian.io/fhir/ext/ol-run-id",
       "valueString": "550e8400-e29b-41d4-a716-446655440000" }           // EXT 7
   ]
 }
 ```
 
-> EXT 5 (`ecds-ssor`) uses the four-category NCQA SSoR vocabulary and is derived from EXT 1 (`source-type`) via deterministic mapping rule. SSoR = `null` when `source-type = unknown`, which triggers a Tier 1 governance finding on metadata management maturity. EXT 6 (`ingest-pipeline-id`) and EXT 7 (`ol-run-id`) are both set by the pipeline orchestrator at ingest time; EXT 7 is the join key between AuditEvent and the OpenLineage lineage graph.
+> EXT 5 (`ecds-ssor`) uses the four-category NCQA SSoR vocabulary and is derived from EXT 1 (`source-type`) via deterministic mapping rule. SSoR = `null` when `source-type = unknown`, which triggers a Tier 1 governance finding on metadata management maturity. EXT 6 (`ingest-pipeline-id`) and EXT 7 (`ol-run-id`) are both set by the pipeline orchestrator at ingest time; EXT 7 is an ingest batch tag, not a join key — OpenLineage RunEvents go directly to OpenMetadata (Marquez dropped), which builds the lineage graph from each RunEvent's declared inputs/outputs.
 
 ---
 
@@ -282,7 +282,7 @@ Required for Level 1–5 semantic conformance testing against HEDIS MP2025 measu
 
 | Resource Type | FHIR R4 Resource | Use Cases | Status | Key Fields / Notes |
 |---|---|---|---|---|
-| AuditEvent | AuditEvent | All | **REQUIRED (may be empty)** | Client AuditEvents from FHIR server included even if empty — absence is a scored Tier 3 finding. Indicina generates its own AuditEvents with seven extensions at Stage 3. |
+| AuditEvent | AuditEvent | All | **REQUIRED (may be empty)** | Client AuditEvents from FHIR server included even if empty — absence is a scored Tier 3 finding. Sonian generates its own AuditEvents with seven extensions at Stage 3. |
 | Provenance | Provenance | All | RECOMMENDED | Include via `includeAssociatedData=hl7.fhir.uv.bulkdata#Provenance` if supported. Absence documented as Tier 3 finding. PDex Provenance is a positive finding if present for UC3. |
 
 ---
@@ -312,7 +312,7 @@ PHI redaction is required for **Path B only**. Path C (plan-owned Aidbox, post B
 
 Referential integrity must be preserved across all resource references after anonymization. If `Patient.id` is pseudonymized to `pat-abc123`, then every `Condition.subject`, `Observation.subject`, `Encounter.subject`, `Coverage.beneficiary`, and `AuditEvent.entity` reference pointing to that patient must use `pat-abc123`.
 
-> **⚠** Broken referential integrity is the most common anonymization failure mode and renders the extract partially or fully unusable for Level 3 context conformance testing. Indicina recommends testing a 50-member sample for referential integrity before delivering the full extract.
+> **⚠** Broken referential integrity is the most common anonymization failure mode and renders the extract partially or fully unusable for Level 3 context conformance testing. Sonian recommends testing a 50-member sample for referential integrity before delivering the full extract.
 
 ---
 
@@ -324,7 +324,7 @@ Referential integrity must be preserved across all resource references after ano
 - File naming: one file per resource type — `Patient.ndjson`, `Coverage.ndjson`, `Condition.ndjson`, etc.
 - Encoding: UTF-8
 - Compression: gzip compression accepted (`.ndjson.gz`)
-- Delivery: encrypted file transfer via SFTP or secure cloud storage link provided by Indicina at engagement kickoff
+- Delivery: encrypted file transfer via SFTP or secure cloud storage link provided by Sonian at engagement kickoff
 
 ### 6.2 Delivery Checklist
 
@@ -344,7 +344,7 @@ Referential integrity must be preserved across all resource references after ano
 | 12 | Provenance resources included via `includeAssociatedData` parameter or noted as absent in Section 6.3 | ☐ Confirmed |
 | 13 | AuditEvent file included (even if empty — note gap in Section 6.3; absence is a scored finding) | ☐ Confirmed |
 | 14 | File naming follows `resource-type.ndjson` convention | ☐ Confirmed |
-| 15 | Delivery via Indicina-provided secure channel | ☐ Confirmed |
+| 15 | Delivery via Sonian-provided secure channel | ☐ Confirmed |
 
 ### 6.3 Known Gaps — Please Document
 
@@ -364,14 +364,14 @@ For questions about this specification, contact:
 
 **Michael E. Campbell**
 Healthcare Informatics Strategist and Consultant
-Indicina
+Sonian
 mcampbell@indicina.com
 
 For technical questions about the `$export` operation or FHIR Bulk Data Access IG: https://hl7.org/fhir/uv/bulkdata/
 
 For questions about CARIN Blue Button IG (ExplanationOfBenefit profile): https://hl7.org/fhir/us/carin-bb/
 
-*Indicina will acknowledge receipt of the extract within one business day and confirm readiness to begin the assessment phase. Questions about individual resource type availability or anonymization approach are welcome prior to export — it is preferable to resolve ambiguities before generating a large extract than to discover issues after delivery.*
+*Sonian will acknowledge receipt of the extract within one business day and confirm readiness to begin the assessment phase. Questions about individual resource type availability or anonymization approach are welcome prior to export — it is preferable to resolve ambiguities before generating a large extract than to discover issues after delivery.*
 
 ---
 
@@ -393,7 +393,7 @@ For questions about CARIN Blue Button IG (ExplanationOfBenefit profile): https:/
 | EXT 4 source-inference-confidence | Informal | Formal — direct provenance maturity metric |
 | EXT 5 ecds-ssor | Not present | **New** — four-category NCQA SSoR vocabulary |
 | EXT 6 ingest-pipeline-id | Informal | Formal — orchestrator-set; three-level run/feed/batch traceability |
-| EXT 7 ol-run-id | Not present | **New** — OpenLineage run ID UUID; enables bidirectional join to lineage graph; required for Level 3+ maturity |
+| EXT 7 ol-run-id | Not present | **New** — OpenLineage run ID UUID; ingest batch tag (not a join key); RunEvents go directly to OpenMetadata; required for Level 3+ maturity |
 | SSoR mapping table | Not present | Full 12-type → SSoR mapping rule |
 | Tier 1 finding name | Compliance gap | Governance gap (DAMA-BOK grounded) |
 | Measurement year | MY2025 | MP2025 (measurement period) |

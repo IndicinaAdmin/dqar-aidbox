@@ -60,13 +60,13 @@ EXT 6–7 from pipeline orchestrator, set once before the resource loop begins.
 
 | EXT | URL | Source |
 |---|---|---|
-| EXT 1 | `http://indicina.com/fhir/ext/source-type` | `infer_source_metadata()` |
-| EXT 2 | `http://indicina.com/fhir/ext/source-system-id` | `infer_source_metadata()` |
-| EXT 3 | `http://indicina.com/fhir/ext/source-feed-id` | `infer_source_metadata()` |
-| EXT 4 | `http://indicina.com/fhir/ext/source-inference-confidence` | `infer_source_metadata()` |
-| EXT 5 | `http://indicina.com/fhir/ext/ecds-ssor` | Derived from EXT 1 |
-| EXT 6 | `http://indicina.com/fhir/ext/ingest-pipeline-id` | Orchestrator |
-| EXT 7 | `http://indicina.com/fhir/ext/ol-run-id` | Orchestrator (ingest batch tag) |
+| EXT 1 | `http://Sonian.io/fhir/ext/source-type` | `infer_source_metadata()` |
+| EXT 2 | `http://Sonian.io/fhir/ext/source-system-id` | `infer_source_metadata()` |
+| EXT 3 | `http://Sonian.io/fhir/ext/source-feed-id` | `infer_source_metadata()` |
+| EXT 4 | `http://Sonian.io/fhir/ext/source-inference-confidence` | `infer_source_metadata()` |
+| EXT 5 | `http://Sonian.io/fhir/ext/ecds-ssor` | Derived from EXT 1 |
+| EXT 6 | `http://Sonian.io/fhir/ext/ingest-pipeline-id` | Orchestrator |
+| EXT 7 | `http://Sonian.io/fhir/ext/ol-run-id` | Orchestrator (ingest batch tag) |
 
 **EXT 7 is an ingest batch tag, not a Marquez join key.** Marquez has been dropped.
 OpenLineage `RunEvent`s go directly to OpenMetadata. See `shared/lineage.py`.
