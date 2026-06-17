@@ -6,7 +6,7 @@
       {
         "system": "http://Sonian.io/fhir/tags",
         "code": "init-bundle",
-        "display": "Generated 2026-06-17T17:48:12.992130+00:00 from dqar-contracts"
+        "display": "Generated 2026-06-17T18:21:24.580536+00:00 from dqar-contracts"
       }
     ]
   },
@@ -75,8 +75,8 @@
             "forEachOrNull": "entity",
             "column": [
               {
-                "name": "entity_ref",
-                "path": "what.reference"
+                "name": "entity_id",
+                "path": "what.id"
               },
               {
                 "name": "entity_type",
