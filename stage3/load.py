@@ -151,7 +151,9 @@ def _iter_ndjson(tar: tarfile.TarFile):
         for line in raw.decode("utf-8").splitlines():
             line = line.strip()
             if line:
-                yield json.loads(line)
+                resource = json.loads(line)
+                resource["_source_file"] = member.name  # for feed manifest matching
+                yield resource
 
 
 def load_egress_package(
@@ -177,6 +179,10 @@ def load_egress_package(
     print("[load] pre-ingest scan …")
     ingest_context = build_ingest_context(package_path)
     print(summarise(ingest_context))
+    # Use the feed manifest from the package if none was passed explicitly
+    if feed_manifest is None and ingest_context.feed_manifest:
+        feed_manifest = ingest_context.feed_manifest
+        print(f"[load] using feed_manifest from package ({len(feed_manifest.get('feeds', []))} feed(s))")
 
     emit_run_event(
         event_type="START",
@@ -277,6 +283,9 @@ def _process_resource(resource: dict, batch: list,
             f"  [load] unknown source-type for {resource_type}/{resource.get('id', '?')} "
             f"(basis: {inference.get('inference_basis', '?')}) — will surface as finding"
         )
+
+    # Strip pipeline-internal annotation before sending to Aidbox
+    resource.pop("_source_file", None)
 
     audit_event = _build_audit_event(resource, inference, pipeline_id, ol_run_id)
     batch.append((resource, audit_event))

@@ -174,19 +174,29 @@ def get_source_from_manifest(resource: dict, feed_manifest: dict | None) -> dict
 
     for feed in feed_manifest.get("feeds", []):
         if filename in feed.get("files", []):
+            source_type = feed.get("source_system_type", "unknown")
+            # Derive a stable feed_id from available fields — feed_id may be absent
+            # in early client-kit versions that don't yet populate it.
+            raw_feed_id = (
+                feed.get("feed_id")
+                or feed.get("fhir_server_url")
+                or source_type
+            )
+            feed_id = _short_hash(raw_feed_id, "feed-") if raw_feed_id else "unknown"
+            sys_id = feed.get("source_system_id", feed_id)
             return {
-                "source_type":   feed["source_system_type"],
-                "source_feed_id": feed["feed_id"],
-                "source_system_id": feed.get("source_system_id", feed["feed_id"]),
-                "confidence":    "asserted",
-                "inference_basis": f"feed-manifest:{feed['feed_id']}",
+                "source_type":     source_type,
+                "source_feed_id":  feed_id,
+                "source_system_id": sys_id,
+                "confidence":      "asserted",
+                "inference_basis": f"feed-manifest:{feed_id}",
             }
 
     return {
-        "source_type":    "unknown",
-        "source_feed_id": f"undeclared-{filename}",
+        "source_type":     "unknown",
+        "source_feed_id":  f"undeclared-{filename}",
         "source_system_id": f"undeclared-{filename}",
-        "confidence":     "unknown",
+        "confidence":      "unknown",
         "inference_basis": f"manifest-miss:{filename}",
     }
 
@@ -198,6 +208,11 @@ def get_source_from_manifest(resource: dict, feed_manifest: dict | None) -> dict
 def get_source_from_meta(resource: dict) -> dict | None:
     meta_source = resource.get("meta", {}).get("source")
     if not meta_source:
+        return None
+    # HAPI FHIR stores internal transaction IDs in meta.source as "#<token>".
+    # These are per-resource identifiers, not meaningful source URIs — filtering
+    # them prevents each resource from getting a different source_system_id hash.
+    if meta_source.startswith("#"):
         return None
 
     source_type = _uri_to_source_type(meta_source) or "clinical_ehr"

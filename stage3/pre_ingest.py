@@ -49,6 +49,7 @@ class IngestContext:
     dominant_identifier_system: str | None       # URI if one system accounts for ≥ 80% of id'd resources
     resource_counts: dict[str, int]              # resource_type → count
     patient_estimate: int                        # unique UUID namespace prefixes
+    feed_manifest: dict | None = None            # parsed feed_manifest.json from the package
 
 
 def _short_hash(value: str, prefix: str = "") -> str:
@@ -75,6 +76,7 @@ def build_ingest_context(package_path: str) -> IngestContext:
     uuid_namespace_survey: Counter = Counter()
     resource_counts: dict[str, int] = {}
     identifier_bearing_resources = 0
+    feed_manifest: dict | None = None
 
     # Raw patient→encounters accumulator used to build patient_provider_index below.
     # keyed by patient_id → list of provider metadata dicts (one per encounter)
@@ -82,15 +84,24 @@ def build_ingest_context(package_path: str) -> IngestContext:
 
     with tarfile.open(package_path, "r:gz") as tar:
         for member in tar.getmembers():
-            if not (member.name.endswith(".ndjson") or
-                    member.name.endswith(".ndjson.gz")):
-                continue
-
             f = tar.extractfile(member)
             if f is None:
                 continue
 
             raw = f.read()
+
+            # Feed manifest — JSON, not NDJSON
+            if member.name == "feed_manifest.json":
+                try:
+                    feed_manifest = json.loads(raw)
+                except json.JSONDecodeError:
+                    pass
+                continue
+
+            if not (member.name.endswith(".ndjson") or
+                    member.name.endswith(".ndjson.gz")):
+                continue
+
             if member.name.endswith(".gz"):
                 raw = gzip.decompress(raw)
 
@@ -143,7 +154,44 @@ def build_ingest_context(package_path: str) -> IngestContext:
         dominant_identifier_system=dominant,
         resource_counts=resource_counts,
         patient_estimate=len(uuid_namespace_survey),
+        feed_manifest=_normalise_feed_manifest(feed_manifest),
     )
+
+
+_FRAMEWORK_TO_SOURCE_TYPE = {
+    "hapi":       "clinical_ehr",
+    "blaze":      "clinical_ehr",
+    "azure-fhir": "clinical_ehr",
+    "smile-cdr":  "clinical_ehr",
+    "intersystems-iris": "clinical_ehr",
+}
+
+
+def _normalise_feed_manifest(manifest: dict | None) -> dict | None:
+    """
+    Normalise a feed_manifest dict produced by dqar-client-kit.
+
+    Adds missing feed_id and maps server-framework source_system_type values
+    (e.g. "hapi") to the DQAR source-type vocabulary (e.g. "clinical_ehr").
+    The feed_id is derived from fhir_server_url when available, else from the
+    source_system_type string — giving a stable, deduplicated identifier even
+    when the client-kit didn't populate fhir_server_url yet.
+    """
+    if not manifest:
+        return None
+
+    for feed in manifest.get("feeds", []):
+        # Resolve server-framework type names to vocabulary source types
+        raw_type = feed.get("source_system_type", "")
+        if raw_type in _FRAMEWORK_TO_SOURCE_TYPE:
+            feed["source_system_type"] = _FRAMEWORK_TO_SOURCE_TYPE[raw_type]
+
+        # Generate feed_id when missing
+        if not feed.get("feed_id"):
+            raw = feed.get("fhir_server_url") or feed.get("source_system_type") or "unknown"
+            feed["feed_id"] = _short_hash(raw, "feed-")
+
+    return manifest
 
 
 def _index_encounter(encounter: dict,
@@ -175,7 +223,11 @@ def _index_encounter(encounter: dict,
     sp_display = sp.get("display", "")
     sp_ref = sp.get("reference", "")
 
-    if not sp_display and not id_system:
+    # Use serviceProvider.reference as a stable fallback when display is absent.
+    # Even a bare "Organization/132009851" ref gives a consistent feed_id across
+    # all encounters that share the same provider.
+    sp_key = sp_display or sp_ref
+    if not sp_key and not id_system:
         return None
 
     entry = {
@@ -183,7 +235,7 @@ def _index_encounter(encounter: dict,
         "provider_display":  sp_display or None,
         "provider_ref":      sp_ref or None,
         "system_id":         _short_hash(id_system, "enc-sys-") if id_system else None,
-        "feed_id":           _short_hash(sp_display, "org-") if sp_display else None,
+        "feed_id":           _short_hash(sp_key, "org-") if sp_key else None,
     }
     index[eid] = entry
     return entry
