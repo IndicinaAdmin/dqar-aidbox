@@ -35,6 +35,28 @@ def load_viewdefinitions() -> list:
                 f"ViewDefinition '{vd.get('name')}' is missing getResourceKey() — "
                 "lineage chain would break. Fix in dqar-contracts before generating Init Bundle."
             )
+
+        # getId() strips the resource type and accepts any reference target, producing
+        # silent FK mismatches when a subject reference points to Group or Organization.
+        # All reference columns must use getReferenceKey(<Type>) for typed extraction.
+        all_paths = [
+            col.get("path", "")
+            for select in vd.get("select", [])
+            for col in select.get("column", [])
+        ]
+        bad_paths = [p for p in all_paths if ".getId()" in p]
+        if bad_paths:
+            raise ValueError(
+                f"ViewDefinition '{vd.get('name')}' uses getId() in: {bad_paths}. "
+                "Replace with getReferenceKey(<ResourceType>) for typed reference extraction. "
+                "Fix in dqar-contracts before generating Init Bundle."
+            )
+
+        has_ts = any(p == "getAidboxTs()" for p in all_paths)
+        if not has_ts:
+            print(f"  WARNING: ViewDefinition '{vd.get('name')}' is missing getAidboxTs() — "
+                  "incremental export via _since will not work for this view.")
+
         viewdefs.append(vd)
     print(f"  Loaded {len(viewdefs)} ViewDefinitions from dqar-contracts")
     return viewdefs

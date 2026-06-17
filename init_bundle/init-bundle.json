@@ -6,11 +6,95 @@
       {
         "system": "http://Sonian.io/fhir/tags",
         "code": "init-bundle",
-        "display": "Generated 2026-06-16T13:49:29.548703+00:00 from dqar-contracts"
+        "display": "Generated 2026-06-17T13:11:32.001330+00:00 from dqar-contracts"
       }
     ]
   },
   "entry": [
+    {
+      "resource": {
+        "resourceType": "ViewDefinition",
+        "name": "audit_event_metadata",
+        "resource": "AuditEvent",
+        "status": "active",
+        "description": "Flattens AuditEvent with all 7 Sonian lineage extension fields. One row per entity entry per AuditEvent. Enables SQL-based risk stratification and lineage tracing without raw JSONB extraction.",
+        "select": [
+          {
+            "column": [
+              {
+                "name": "audit_event_id",
+                "path": "getResourceKey()"
+              },
+              {
+                "name": "recorded",
+                "path": "recorded"
+              },
+              {
+                "name": "ts",
+                "path": "getAidboxTs()"
+              },
+              {
+                "name": "action",
+                "path": "action"
+              },
+              {
+                "name": "outcome",
+                "path": "outcome"
+              },
+              {
+                "name": "source_type",
+                "path": "extension.where(url='http://Sonian.io/fhir/ext/source-type').value.ofType(code)"
+              },
+              {
+                "name": "source_system_id",
+                "path": "extension.where(url='http://Sonian.io/fhir/ext/source-system-id').value.ofType(string)"
+              },
+              {
+                "name": "source_feed_id",
+                "path": "extension.where(url='http://Sonian.io/fhir/ext/source-feed-id').value.ofType(string)"
+              },
+              {
+                "name": "confidence",
+                "path": "extension.where(url='http://Sonian.io/fhir/ext/source-inference-confidence').value.ofType(code)"
+              },
+              {
+                "name": "ecds_ssor",
+                "path": "extension.where(url='http://Sonian.io/fhir/ext/ecds-ssor').value.ofType(code)"
+              },
+              {
+                "name": "pipeline_id",
+                "path": "extension.where(url='http://Sonian.io/fhir/ext/ingest-pipeline-id').value.ofType(string)"
+              },
+              {
+                "name": "ol_run_id",
+                "path": "extension.where(url='http://Sonian.io/fhir/ext/ol-run-id').value.ofType(string)"
+              }
+            ]
+          },
+          {
+            "forEachOrNull": "entity",
+            "column": [
+              {
+                "name": "entity_ref",
+                "path": "what.reference"
+              },
+              {
+                "name": "entity_type",
+                "path": "what.type"
+              },
+              {
+                "name": "entity_role",
+                "path": "role.code"
+              }
+            ]
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "ViewDefinition/audit_event_metadata"
+      }
+    },
     {
       "resource": {
         "resourceType": "ViewDefinition",
@@ -27,11 +111,11 @@
               },
               {
                 "name": "patient_id",
-                "path": "subject.getId()"
+                "path": "subject.getReferenceKey(Patient)"
               },
               {
                 "name": "encounter_id",
-                "path": "encounter.getId()"
+                "path": "encounter.getReferenceKey(Encounter)"
               },
               {
                 "name": "clinical_status",
@@ -48,6 +132,10 @@
               {
                 "name": "recorded_date",
                 "path": "recordedDate"
+              },
+              {
+                "name": "ts",
+                "path": "getAidboxTs()"
               }
             ]
           },
@@ -91,7 +179,7 @@
               },
               {
                 "name": "patient_id",
-                "path": "subject.getId()"
+                "path": "subject.getReferenceKey(Patient)"
               },
               {
                 "name": "status",
@@ -111,7 +199,11 @@
               },
               {
                 "name": "service_provider",
-                "path": "serviceProvider.getId()"
+                "path": "serviceProvider.getReferenceKey(Organization)"
+              },
+              {
+                "name": "ts",
+                "path": "getAidboxTs()"
               }
             ]
           },
@@ -151,11 +243,11 @@
               },
               {
                 "name": "patient_id",
-                "path": "subject.getId()"
+                "path": "subject.getReferenceKey(Patient)"
               },
               {
                 "name": "encounter_id",
-                "path": "encounter.getId()"
+                "path": "encounter.getReferenceKey(Encounter)"
               },
               {
                 "name": "effective_date",
@@ -172,6 +264,10 @@
               {
                 "name": "category_code",
                 "path": "category.coding.code.first()"
+              },
+              {
+                "name": "ts",
+                "path": "getAidboxTs()"
               }
             ]
           }
@@ -198,11 +294,11 @@
               },
               {
                 "name": "patient_id",
-                "path": "subject.getId()"
+                "path": "subject.getReferenceKey(Patient)"
               },
               {
                 "name": "encounter_id",
-                "path": "encounter.getId()"
+                "path": "encounter.getReferenceKey(Encounter)"
               },
               {
                 "name": "loinc_code",
@@ -219,6 +315,10 @@
               {
                 "name": "effective_date",
                 "path": "effectiveDateTime"
+              },
+              {
+                "name": "ts",
+                "path": "getAidboxTs()"
               }
             ]
           }
@@ -254,6 +354,10 @@
               {
                 "name": "active",
                 "path": "active"
+              },
+              {
+                "name": "ts",
+                "path": "getAidboxTs()"
               }
             ]
           }
