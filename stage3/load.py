@@ -26,6 +26,7 @@ from datetime import datetime, timezone
 import requests
 
 from stage3.inference import infer_source_metadata
+from stage3.pre_ingest import build_ingest_context, summarise
 from shared.lineage import emit_run_event
 
 AIDBOX_URL = os.environ.get("AIDBOX_URL", "http://localhost:8080")
@@ -173,6 +174,10 @@ def load_egress_package(
 
     Returns a summary dict with counts and any failed resource IDs.
     """
+    print("[load] pre-ingest scan …")
+    ingest_context = build_ingest_context(package_path)
+    print(summarise(ingest_context))
+
     emit_run_event(
         event_type="START",
         run_id=ol_run_id,
@@ -210,14 +215,14 @@ def load_egress_package(
                         _process_resource(
                             entry.get("resource", {}),
                             batch, pipeline_id, ol_run_id,
-                            feed_manifest, cluster_registry,
+                            feed_manifest, cluster_registry, ingest_context,
                         )
                         if len(batch) >= BUNDLE_BATCH_SIZE:
                             flush_batch()
                 else:
                     _process_resource(
                         resource, batch, pipeline_id, ol_run_id,
-                        feed_manifest, cluster_registry,
+                        feed_manifest, cluster_registry, ingest_context,
                     )
                     if len(batch) >= BUNDLE_BATCH_SIZE:
                         flush_batch()
@@ -254,7 +259,8 @@ def load_egress_package(
 
 def _process_resource(resource: dict, batch: list,
                        pipeline_id: str, ol_run_id: str,
-                       feed_manifest: dict, cluster_registry: dict):
+                       feed_manifest: dict, cluster_registry: dict,
+                       ingest_context=None):
     resource_type = resource.get("resourceType")
     if not resource_type or resource_type == "AuditEvent":
         return
@@ -263,6 +269,7 @@ def _process_resource(resource: dict, batch: list,
         resource,
         feed_manifest=feed_manifest,
         cluster_registry=cluster_registry,
+        ingest_context=ingest_context,
     )
 
     if inference.get("source_type") == "unknown":

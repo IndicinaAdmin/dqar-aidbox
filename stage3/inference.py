@@ -458,7 +458,9 @@ def compute_topology_fingerprint(resource: dict) -> str:
             "category_codes": sorted([
                 c.get("code", "")
                 for cat in resource.get("category", [])
+                if isinstance(cat, dict)
                 for c in cat.get("coding", [])
+                if isinstance(c, dict)
             ]),
         },
     }
@@ -516,11 +518,138 @@ def _build_result(inferred: dict) -> dict:
     }
 
 
+# ---------------------------------------------------------------------------
+# Priority 2.7 — Encounter→provider cross-resource resolution
+# ---------------------------------------------------------------------------
+
+def get_source_from_encounter_context(resource: dict,
+                                      ingest_context) -> dict | None:
+    """
+    Priority 2.7: derive source_feed_id (EXT 3) — and source_system_id when no
+    better signal exists — from the resource's Encounter reference.
+
+    Requires an IngestContext built by stage3.pre_ingest.build_ingest_context().
+    The context holds the encounter→serviceProvider index built from a full
+    pre-scan of the egress package.
+
+    Resolves two signals separately:
+      identifier_system  → source_system_id (EXT 2), confidence asserted if
+                            pattern recognised, medium if URI present but unknown
+      provider_display   → source_feed_id (EXT 3), confidence medium
+                            (human-readable display name, not a canonical URI)
+
+    Confidence returned is the higher of the two signals actually found.
+
+    Coverage in real Bulk FHIR exports:
+      Every Observation/Condition/Procedure/MedicationRequest carries an
+      encounter reference.  If the Encounter file is present in the package
+      (standard Bulk FHIR), 100% of these resources are resolvable.
+    """
+    if ingest_context is None:
+        return None
+
+    enc_ref = resource.get("encounter", {}).get("reference", "")
+    if not enc_ref:
+        return None
+
+    enc_id = enc_ref.replace("urn:uuid:", "").split("/")[-1]
+    entry = ingest_context.encounter_provider_index.get(enc_id)
+    if not entry:
+        return None
+
+    sys_id = entry.get("system_id")
+    feed_id = entry.get("feed_id")
+    id_system = entry.get("identifier_system")
+    provider_display = entry.get("provider_display")
+
+    if not sys_id and not feed_id:
+        return None
+
+    # Determine source_type from the encounter's identifier.system URI if present
+    source_type = None
+    if id_system:
+        source_type = _uri_to_source_type(id_system)
+
+    resolved_sys_id = sys_id or feed_id
+    resolved_feed_id = feed_id or sys_id
+    confidence = "asserted" if (source_type and id_system) else "medium"
+
+    basis_parts = []
+    if id_system:
+        basis_parts.append(f"encounter.identifier.system={id_system}")
+    if provider_display:
+        basis_parts.append(f"encounter.serviceProvider={provider_display}")
+
+    return {
+        "source_type":     source_type or "clinical_ehr",
+        "source_system_id": resolved_sys_id,
+        "source_feed_id":   resolved_feed_id,
+        "confidence":       confidence,
+        "inference_basis":  "→".join(basis_parts),
+    }
+
+
+def get_source_from_patient_context(resource: dict,
+                                    ingest_context) -> dict | None:
+    """
+    Priority 2.8: resolve source_feed_id from a patient's dominant provider.
+
+    Used for resources that carry patient.reference but no encounter.reference
+    (e.g. Device, AllergyIntolerance). Looks up the patient in the
+    patient_provider_index built by pre_ingest.build_ingest_context().
+
+    Returns only when the patient_provider_index has a dominant provider
+    (≥80% of the patient's encounters share one provider). Multi-provider
+    patients return None and fall through to structural inference.
+    """
+    if ingest_context is None:
+        return None
+
+    patient_index = getattr(ingest_context, "patient_provider_index", None)
+    if not patient_index:
+        return None
+
+    pat_ref = resource.get("patient", {}).get("reference", "")
+    if not pat_ref:
+        return None
+
+    pat_id = pat_ref.replace("urn:uuid:", "").split("/")[-1]
+    entry = patient_index.get(pat_id)
+    if not entry:
+        return None
+
+    sys_id = entry.get("system_id")
+    feed_id = entry.get("feed_id")
+    id_system = entry.get("identifier_system")
+    provider_display = entry.get("provider_display")
+
+    if not sys_id and not feed_id:
+        return None
+
+    source_type = _uri_to_source_type(id_system) if id_system else None
+    confidence = "asserted" if (source_type and id_system) else "medium"
+
+    basis_parts = ["patient→dominant-provider"]
+    if id_system:
+        basis_parts.append(f"encounter.identifier.system={id_system}")
+    if provider_display:
+        basis_parts.append(f"encounter.serviceProvider={provider_display}")
+
+    return {
+        "source_type":     source_type or "clinical_ehr",
+        "source_system_id": sys_id or feed_id,
+        "source_feed_id":   feed_id or sys_id,
+        "confidence":       confidence,
+        "inference_basis":  "→".join(basis_parts),
+    }
+
+
 def infer_source_metadata(
     resource: dict,
     feed_manifest: dict | None = None,
     cluster_registry: dict | None = None,
     provenance_lookup=None,
+    ingest_context=None,
 ) -> dict:
     """
     Run inference priorities 0–6 in order. Return first successful result.
@@ -538,6 +667,8 @@ def infer_source_metadata(
         cluster_registry: mutable dict shared across calls for topology clustering;
                           pass {} and reuse across all resources in a batch
         provenance_lookup: optional callable(resource_type, id) → Provenance | None
+        ingest_context: IngestContext from stage3.pre_ingest.build_ingest_context();
+                        enables Priority 2.7 encounter→provider resolution
     """
     if cluster_registry is None:
         cluster_registry = {}
@@ -558,8 +689,21 @@ def infer_source_metadata(
         return _build_result(result)
 
     # Priority 2.5 — identifier.system URI
-    # identifier.system URIs survive PHI redaction; direct authoritative signal.
     result = get_source_from_identifier_system(resource)
+    if result:
+        return _build_result(result)
+
+    # Priority 2.7 — encounter→provider cross-resource resolution
+    # Requires IngestContext from pre_ingest.build_ingest_context().
+    result = get_source_from_encounter_context(resource, ingest_context)
+    if result:
+        return _build_result(result)
+
+    # Priority 2.8 — patient→dominant provider resolution
+    # Fallback for resources with patient reference but no encounter reference
+    # (Device, AllergyIntolerance). Uses dominant provider only when ≥80% of
+    # the patient's encounters share the same provider.
+    result = get_source_from_patient_context(resource, ingest_context)
     if result:
         return _build_result(result)
 
