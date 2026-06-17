@@ -20,6 +20,7 @@ import io
 import json
 import os
 import tarfile
+import time
 import uuid
 from datetime import datetime, timezone
 
@@ -30,7 +31,13 @@ from stage3.pre_ingest import build_ingest_context, summarise
 from shared.lineage import emit_run_event
 
 AIDBOX_URL = os.environ.get("AIDBOX_URL", "http://localhost:8080")
-BUNDLE_BATCH_SIZE = int(os.environ.get("DQAR_BUNDLE_BATCH_SIZE", "200"))
+# Default: single-pair bundles (1 resource + 1 AuditEvent per transaction).
+# x-fhir-skip-reference-validation is not honoured for multi-resource transaction
+# bundles on some Aidbox Edge sandboxes, so default 1 avoids cross-bundle reference
+# failures. Production Aidbox (private network, skip-ref-validation working) can
+# safely use DQAR_BUNDLE_BATCH_SIZE=200.
+BUNDLE_BATCH_SIZE = int(os.environ.get("DQAR_BUNDLE_BATCH_SIZE", "1"))
+_BUNDLE_MAX_RETRIES = int(os.environ.get("DQAR_BUNDLE_MAX_RETRIES", "3"))
 
 EXT_SOURCE_TYPE       = "http://Sonian.io/fhir/ext/source-type"
 EXT_SOURCE_SYSTEM_ID  = "http://Sonian.io/fhir/ext/source-system-id"
@@ -124,24 +131,92 @@ def _post_bundle(bundle: dict, headers: dict) -> tuple[int, int]:
         "Content-Type": "application/fhir+json",
         "x-fhir-skip-reference-validation": "true",
     }
-    resp = requests.post(
-        f"{AIDBOX_URL}/fhir",
-        json=bundle,
-        headers=post_headers,
-        timeout=120,
-    )
-    if resp.status_code not in (200, 201):
+    last_exc = None
+    for attempt in range(_BUNDLE_MAX_RETRIES):
+        resp = requests.post(
+            f"{AIDBOX_URL}/fhir",
+            json=bundle,
+            headers=post_headers,
+            timeout=120,
+        )
+        if resp.status_code in (200, 201):
+            resource_count = len(bundle["entry"]) // 2
+            return resource_count, 0
+        # Retry on transient 5xx (502 Bad Gateway, 503, 504)
+        if resp.status_code >= 500:
+            wait = 2 ** attempt
+            print(f"  [load] transient {resp.status_code} on attempt {attempt+1}/{_BUNDLE_MAX_RETRIES}, retrying in {wait}s…")
+            time.sleep(wait)
+            last_exc = RuntimeError(
+                f"Bundle POST failed HTTP {resp.status_code}: {resp.text[:500]}"
+            )
+            continue
+        # 4xx — non-retryable validation failure
         raise RuntimeError(
             f"Bundle POST failed HTTP {resp.status_code}: {resp.text[:500]}"
         )
-    resource_count = len(bundle["entry"]) // 2
-    return resource_count, 0
+    raise last_exc
+
+
+# Load order priority — lower number loads first, satisfying FK-style references.
+# Resources with no clinical dependencies (Organizations, Patients) load before
+# those that reference them (Encounters, Conditions, CarePlans, etc.).
+_RESOURCE_TYPE_PRIORITY: dict[str, int] = {
+    "Organization":          10,
+    "Practitioner":          10,
+    "PractitionerRole":      15,
+    "Patient":               20,
+    "RelatedPerson":         25,
+    "Coverage":              30,
+    "Encounter":             40,
+    "Condition":             50,
+    "Observation":           50,
+    "Procedure":             50,
+    "MedicationRequest":     50,
+    "MedicationStatement":   50,
+    "MedicationAdministration": 50,
+    "AllergyIntolerance":    50,
+    "Immunization":          50,
+    "DiagnosticReport":      55,
+    "DocumentReference":     55,
+    "Task":                  60,
+    "Appointment":           60,
+    "CareTeam":              70,
+    "CarePlan":              80,
+    "ExplanationOfBenefit":  80,
+}
+
+_DEFAULT_PRIORITY = 50
+
+
+def _member_priority(member: tarfile.TarInfo) -> int:
+    """Return load order priority for a tar member by resource type in filename."""
+    name = member.name.rstrip(".gz").rstrip(".ndjson")
+    # Handle paths like "dir/ResourceType.ndjson.gz"
+    base = name.split("/")[-1]
+    return _RESOURCE_TYPE_PRIORITY.get(base, _DEFAULT_PRIORITY)
+
+
+def _strip_empty_collections(obj):
+    """Recursively remove empty arrays and None values.
+
+    FHIR R4 forbids empty arrays — Aidbox rejects them with 'empty-value'.
+    """
+    if isinstance(obj, dict):
+        return {k: _strip_empty_collections(v) for k, v in obj.items()
+                if v is not None and v != [] and v != {}}
+    if isinstance(obj, list):
+        cleaned = [_strip_empty_collections(i) for i in obj]
+        return [i for i in cleaned if i is not None and i != [] and i != {}]
+    return obj
 
 
 def _iter_ndjson(tar: tarfile.TarFile):
-    for member in tar.getmembers():
-        if not (member.name.endswith(".ndjson") or member.name.endswith(".ndjson.gz")):
-            continue
+    members = [m for m in tar.getmembers()
+               if m.name.endswith(".ndjson") or m.name.endswith(".ndjson.gz")]
+    members.sort(key=_member_priority)
+
+    for member in members:
         f = tar.extractfile(member)
         if f is None:
             continue
@@ -214,9 +289,22 @@ def load_egress_package(
         batch.clear()
 
     try:
+        current_priority = None
         with tarfile.open(package_path, "r:gz") as tar:
             for resource in _iter_ndjson(tar):
-                if resource.get("resourceType") == "Bundle":
+                resource_type = resource.get("resourceType")
+                resource_priority = _RESOURCE_TYPE_PRIORITY.get(
+                    resource_type, _DEFAULT_PRIORITY
+                )
+
+                # Flush when crossing a priority boundary so lower-priority
+                # resources (e.g. Patients) are committed before higher-priority
+                # ones (e.g. Encounters) reference them.
+                if current_priority is not None and resource_priority != current_priority:
+                    flush_batch()
+                current_priority = resource_priority
+
+                if resource_type == "Bundle":
                     for entry in resource.get("entry", []):
                         _process_resource(
                             entry.get("resource", {}),
@@ -286,6 +374,9 @@ def _process_resource(resource: dict, batch: list,
 
     # Strip pipeline-internal annotation before sending to Aidbox
     resource.pop("_source_file", None)
+
+    # FHIR R4 forbids empty arrays — strip before validation
+    resource = _strip_empty_collections(resource)
 
     audit_event = _build_audit_event(resource, inference, pipeline_id, ol_run_id)
     batch.append((resource, audit_event))

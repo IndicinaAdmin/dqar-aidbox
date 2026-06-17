@@ -105,12 +105,13 @@ def build_bundle(viewdefs: list, ext_defs: dict) -> dict:
             "type": "Extension",
             "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension",
             "derivation": "constraint",
+            "context": [{"type": "element", "expression": "AuditEvent"}],
             "differential": {
                 "element": [
                     {
                         "id": "Extension.value[x]",
                         "path": "Extension.value[x]",
-                        "type": [{"code": ext["valueType"].replace("value", "")}]
+                        "type": [{"code": ext["valueType"].replace("value", "").lower()}]
                     }
                 ]
             }

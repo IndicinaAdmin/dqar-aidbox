@@ -6,7 +6,7 @@
       {
         "system": "http://Sonian.io/fhir/tags",
         "code": "init-bundle",
-        "display": "Generated 2026-06-17T13:11:32.001330+00:00 from dqar-contracts"
+        "display": "Generated 2026-06-17T17:48:12.992130+00:00 from dqar-contracts"
       }
     ]
   },
@@ -380,6 +380,12 @@
         "type": "Extension",
         "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension",
         "derivation": "constraint",
+        "context": [
+          {
+            "type": "element",
+            "expression": "AuditEvent"
+          }
+        ],
         "differential": {
           "element": [
             {
@@ -387,7 +393,7 @@
               "path": "Extension.value[x]",
               "type": [
                 {
-                  "code": "Code"
+                  "code": "code"
                 }
               ]
             }
@@ -411,6 +417,12 @@
         "type": "Extension",
         "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension",
         "derivation": "constraint",
+        "context": [
+          {
+            "type": "element",
+            "expression": "AuditEvent"
+          }
+        ],
         "differential": {
           "element": [
             {
@@ -418,7 +430,7 @@
               "path": "Extension.value[x]",
               "type": [
                 {
-                  "code": "String"
+                  "code": "string"
                 }
               ]
             }
@@ -442,6 +454,12 @@
         "type": "Extension",
         "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension",
         "derivation": "constraint",
+        "context": [
+          {
+            "type": "element",
+            "expression": "AuditEvent"
+          }
+        ],
         "differential": {
           "element": [
             {
@@ -449,7 +467,7 @@
               "path": "Extension.value[x]",
               "type": [
                 {
-                  "code": "String"
+                  "code": "string"
                 }
               ]
             }
@@ -473,6 +491,12 @@
         "type": "Extension",
         "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension",
         "derivation": "constraint",
+        "context": [
+          {
+            "type": "element",
+            "expression": "AuditEvent"
+          }
+        ],
         "differential": {
           "element": [
             {
@@ -480,7 +504,7 @@
               "path": "Extension.value[x]",
               "type": [
                 {
-                  "code": "Code"
+                  "code": "code"
                 }
               ]
             }
@@ -504,6 +528,12 @@
         "type": "Extension",
         "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension",
         "derivation": "constraint",
+        "context": [
+          {
+            "type": "element",
+            "expression": "AuditEvent"
+          }
+        ],
         "differential": {
           "element": [
             {
@@ -511,7 +541,7 @@
               "path": "Extension.value[x]",
               "type": [
                 {
-                  "code": "Code"
+                  "code": "code"
                 }
               ]
             }
@@ -535,6 +565,12 @@
         "type": "Extension",
         "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension",
         "derivation": "constraint",
+        "context": [
+          {
+            "type": "element",
+            "expression": "AuditEvent"
+          }
+        ],
         "differential": {
           "element": [
             {
@@ -542,7 +578,7 @@
               "path": "Extension.value[x]",
               "type": [
                 {
-                  "code": "String"
+                  "code": "string"
                 }
               ]
             }
@@ -566,6 +602,12 @@
         "type": "Extension",
         "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension",
         "derivation": "constraint",
+        "context": [
+          {
+            "type": "element",
+            "expression": "AuditEvent"
+          }
+        ],
         "differential": {
           "element": [
             {
@@ -573,7 +615,7 @@
               "path": "Extension.value[x]",
               "type": [
                 {
-                  "code": "String"
+                  "code": "string"
                 }
               ]
             }

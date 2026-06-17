@@ -69,7 +69,7 @@ def materialize_view(aidbox_url: str, headers: dict, name: str) -> bool:
         timeout=60,
     )
 
-    if resp.status_code == 200:
+    if resp.status_code in (200, 201):
         result = resp.json()
         params = {p["name"]: p.get("valueString") for p in result.get("parameter", [])}
         print(f"  ✓ {name} → {params.get('viewName', 'sof.' + name)}")
