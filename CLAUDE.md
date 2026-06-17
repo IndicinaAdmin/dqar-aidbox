@@ -172,3 +172,4 @@ AccessPolicies. One Organization resource per engagement, created by `stage3/pro
 2. Does Aidbox support auto-generation of Provenance resources on ingest?
 3. Does Interbox support the typed/testable/modular mapping pattern described at DevDays 2026?
 4. Termbox standalone licensing terms for plans with existing FHIR servers.
+5. Are DB Queries and Aidbox Notebooks backed by FHIR/Aidbox resources with a REST API (e.g. `PUT /AidboxNotebook/cbp-measure`)? If so, we could register Stage 4 SQL queries programmatically as part of pipeline setup — the same pattern used by the init-bundle for ViewDefinitions.
