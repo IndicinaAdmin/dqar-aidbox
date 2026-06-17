@@ -1,6 +1,6 @@
 # DQAR Framework Summary
 **Digital Quality Audit Readiness — Sonian**
-*Version: June 2026 (updated: NCQA ECDS page Jan 2026 + hybrid retirement calendar) | Confidential — Internal Reference*
+*Version: June 2026 (updated: NCQA ECDS page Jan 2026 + hybrid retirement calendar; CDG-MM maturity model integrated Jun 2026; AuditEvent seven-extension provenance architecture Jun 2026) | Confidential — Internal Reference*
 
 ---
 
@@ -25,28 +25,18 @@ This flexibility is a feature, not a gap. Plans at different maturity levels nee
 
 DQAR is the technical core of a four-part consulting suite that takes a health plan from "we don't know where we stand" to "we own a governed, FHIR-native digital-quality pipeline." The four offerings form a single funnel — **survey → train → assess → remediate** — in which each product de-risks and creates pull for the next.
 
-1. **Modern Data Governance Readiness Survey** — a low-cost, top-of-funnel maturity diagnostic. Scores a plan against the CMMI-DMM 1–5 ladder across the five DAMA-DMBOK knowledge areas DQAR assesses at Level 6, in the DGI vocabulary the CDO already knows. It estimates the gap and routes the plan forward; it does not replace the assessment, which proves the gap.
-2. **Modern Data Governance Training Program** — builds the internal sponsorship, vocabulary, and capability a plan needs to govern a FHIR-native pipeline and act on DQAR findings. Spine is the DGI 7-step governance life cycle; body is the DAMA-DMBOK knowledge areas plus digital-quality literacy (ECDS vs. dQM, the MY2029 calendar, the five-level semantic validation model).
-3. **Health-Payer Data Governance Assessment for Digital Quality** — the paid core, i.e., the DQAR engagement itself: two parallel tracks (five-level semantic validation + Level 6 governance maturity), six domains, three-tier findings. This is the independent validation layer described above.
+1. **Computable Data Governance Readiness Survey** — a low-cost, top-of-funnel maturity diagnostic. Scores a plan against the **CDG-MM (Computable Data Governance Maturity Model)** — Sonian's clean-room 1–5 maturity ladder across five capability pillars, with a derived Governance Index — in vocabulary the CDO already recognizes. One survey question maps to each of the 15 CDG-MM cells, producing an indicative maturity band. It estimates the gap and routes the plan forward; it does not replace the assessment, which proves the gap with evidence.
+2. **Computable Data Governance Training Program** — builds the internal sponsorship, vocabulary, and capability a plan needs to govern a FHIR-native pipeline and act on DQAR findings. Spine is the DGI 7-step governance life cycle; body is the DAMA-DMBOK knowledge areas plus digital-quality literacy (ECDS vs. dQM, the MY2029 calendar, the five-level semantic validation model, and the CDG-MM maturity ladder + Governance Index). Consistent with the CDG-MM design rule, the bodies of knowledge (DAMA-DMBOK, DGI) supply *vocabulary the CDO already recognizes*; the maturity scoring itself is the proprietary CDG-MM.
+3. **Health-Payer Data Governance Assessment for Digital Quality** — the paid core, i.e., the DQAR engagement itself: two parallel tracks (five-level semantic validation + CDG-MM governance maturity scoring), six domains, three-tier findings. This is the independent validation layer described above.
 4. **Advisement & Remediation (incl. Health Samurai)** — the recurring-revenue engine that acts on findings via the three remediation paths, the Aidbox / Termbox / Interbox stack, the upstream AuditEvent provenance migration advisory, and the $4K/month retainer.
 
 **Governing principles across all four products:**
 
 - **Independence is the brand.** Sonian assesses and validates; it never becomes the sole implementer of what it validates. Where Health Samurai builds, Sonian remains the independent layer confirming the finding is actually closed. This is the structural answer to the conflict-of-interest problem that plagues both the certified-auditor relationship and the incumbent-vendor "we validate ourselves" model.
-- **The frameworks are the credibility layer; DQAR is the product.** Lead with the buyer's own canon — DAMA-DMBOK knowledge areas, the DGI operating model, the AWS "governance is the plan, management is the action" distinction — and close on the operationalization. The frameworks define the vocabulary and the maturity ladder; DQAR operationalizes them for the specific failure modes, tools, and regulatory deadlines of payer HEDIS / digital-quality operations.
+- **The frameworks are the credibility layer; DQAR is the product.** Lead with the buyer's own canon — DAMA-DMBOK knowledge areas, the DGI operating model, the AWS "governance is the plan, management is the action" distinction — and close on the operationalization. The bodies of knowledge supply the *vocabulary* the CDO recognizes; the maturity ladder, level descriptors, and scoring rigor are Sonian's own clean-room **CDG-MM**, carrying no licensing dependency on any subscription-gated maturity model. DQAR then operationalizes both for the specific failure modes, tools, and regulatory deadlines of payer HEDIS / digital-quality operations.
 - **Governance belongs upstream, not at the warehouse tail.** Every product reinforces the L.A. Care lesson — quality and lineage must be governed at ingestion, the earliest and cheapest point to catch error — which is exactly what the upstream AuditEvent migration advisory delivers.
-- **Maturity is a ladder, measured against a baseline.** Level 3 (Defined / Governed) is the MY2029 readiness floor. The Survey establishes the baseline, the Assessment scores it rigorously, the UC2 monitoring subscription tracks the climb each quarter — you cannot demonstrate improvement without a starting point.
+- **Maturity is a ladder, measured against a baseline.** Level 3 (Governed) on the CDG-MM is the MY2029 readiness floor. The CDG-MM is the **scoring spine of the funnel**: the Survey establishes an indicative baseline band, the Assessment scores all 15 cells rigorously with evidence, and the UC2 monitoring subscription re-scores each quarter to show the climb — you cannot demonstrate improvement without a starting score.
 - **Every artifact routes forward.** Survey findings route to Training (capability gap) or Assessment (technical/data gap); Assessment findings justify Remediation; Remediation seeds the monitoring subscription. No dead ends, no orphaned deliverables.
-
----
-
-## UC1 Client-Kit — Implementation and GTM Role
-
-`dqar-client-kit` is the codebase implementing UC1 (Digital Measure Readiness) — specifically Stage 1, and optionally Stage 2, of the DQAR pipeline. It is a conformance testing kit the client's own IT team runs entirely within their infrastructure, against raw PHI-containing Bulk FHIR ndjson extracts. Three independent sub-stages run in sequence: Stage 1a tests the FHIR vendor server's `$export` API against the SMART Bulk Data Access IG; Stage 1b validates ndjson structural integrity; Stage 1c tests FHIR R4 + US Core 6.1.0 profile conformance via the HAPI Validator CLI (or, at Rung 3+, Aidbox's `$validate` API). The client receives three JSON reports and three PDF renders. No PHI leaves the client environment unless they explicitly proceed to the optional Stage 2 redaction step.
-
-This is the Rung 1 entry point on the platform ladder, and it is deliberately the lowest-friction artifact Sonian can put in front of a prospect: no BAA, no PHI exposure, no infrastructure dependency on Health Samurai. A plan can run it the same week a conversation starts, while their security and compliance teams are still completing HIPAA and SOC2 due diligence — converting what would otherwise be dead time into a delivered findings report and a remediation roadmap. That artifact does the GTM work a sales deck cannot: it proves the assessment methodology against the plan's own data before they have signed anything beyond an NDA.
-
-The kit's output is the wedge into the rest of the funnel. Tier 2 and Tier 3 findings surfaced at Rung 1 — broken US Core conformance, missing AuditEvent provenance — are the same findings the paid DQAR assessment (Phase 1, Sonian-led) expands on once the plan proceeds to Rung 2 (anonymized extract delivered to the Sonian/Health Samurai sandbox) or beyond. Every prospect that runs the client-kit and sees real, specific gaps in their own data is a qualified lead for the $4K/month retainer engagement — the kit converts an abstract sales pitch about HEDIS audit risk into a concrete, client-specific finding before a single dollar changes hands.
 
 ---
 
@@ -68,7 +58,7 @@ Condensed version:
 
 ### The NCQA DCS Positioning — Secondary Marketing Pitch
 
-> *"NCQA certifies that the measure logic is correct. NCQA's Digital Content Services explicitly does not validate your data mapping or accuracy. DQAR fills that gap — validating the five semantic layers between your raw payer data and your CQL engine, and assessing the MDM maturity, metadata management capability, and data governance policies that determine whether your data quality is sustainable across measurement periods. Without both, you have a precisely executed calculation on ungoverned inputs."*
+> *"NCQA certifies that the measure logic is correct. NCQA's Digital Content Services explicitly does not validate your data mapping or accuracy. DQAR fills that gap — validating the five semantic layers between your raw payer data and your CQL engine, and scoring your data governance maturity on the CDG-MM (inventory, metadata, MDM, data quality, and lineage, with a derived Governance Index) that determines whether your data quality is sustainable across measurement periods. Without both, you have a precisely executed calculation on ungoverned inputs."*
 
 **Source:** NCQA Digital Content Services Customer Handbook (April 2025): *"Successful Implementation confirms that Licensee successfully installed the Digital Content Services Application or Licensee Engine, and the Measures. It does not confirm the Licensee's data mapping, data accuracy or implementation of the NCQA FHIR IG."*
 
@@ -136,55 +126,93 @@ Is the distribution of codes across the population plausible? Are there systemat
 
 ---
 
-### Track B — Level 6 Governance and Management Capability (Organizational)
+### Track B — Level 6 Governance and Management Capability: the CDG-MM (Organizational)
 
-Assesses whether the organization can *sustain* data quality over time. Assessed through structured interviews, documentation review, and artifact inspection — not executable against data. Uses a 1–4 maturity rubric.
+Assesses whether the organization can *sustain* data quality over time. Assessed through structured interviews, documentation review, and artifact inspection — and, at the upper levels, evidenced by computation rather than judgment. This is the organizational layer that sits above the five semantic-validation levels of Track A; it is scored using the **Computable Data Governance Maturity Model (CDG-MM)**, Sonian's proprietary, clean-room maturity framework.
 
-**MDM Maturity**
+**Why "computable" is the through-line.** FHIR makes health data machine-readable, digital quality measures are computable measure content, and AI is only as trustworthy as the data feeding it — all three demand the same governed, computable foundation. The CDG-MM governs data *to be computed on*, and uses computable instruments (conformance engines, PIQI-style rule scoring) to measure how well a plan can do it. It carries no dependency on any licensed, subscription-gated maturity model.
 
-Three master data domains directly affect HEDIS measure rates:
+#### The CDG-MM Maturity Ladder (1–5)
 
-*Member MDM* — identity resolution across enrollment sources, retroactive disenrollment handling, product-line transitions. Failures corrupt denominator completeness. Assess: is there a governed member identity matching process connected to HEDIS eligible population logic? Are enrollment edge cases handled by a governed rule set or ad hoc?
+Original plain-language labels; applied identically to every pillar × dimension cell.
 
-*Provider MDM* — provider specialty, network status, TIN-to-NPI mapping, attribution logic. Failures corrupt provider-attributed denominators and clinical data completeness by provider. Assess: is the provider directory governed against NPPES? Is specialty mapping version-controlled?
-
-*Terminology MDM* — SNOMED, LOINC, RxNorm, NDC bindings governed at platform level or per-application? Is the VSD refresh an annual governed process with a documented owner and change control record?
-
-**Metadata Management Maturity**
-
-Does a data catalog exist (Collibra, Alation, dbt docs) covering HEDIS-relevant data assets? Does it reach the FHIR pipeline or only the BI/reporting layer?
-
-Are transformation rules documented at field level? System-level descriptions ("claims flow from CAPS to EDW") are not field-level lineage ("diagnosis code in EDW.claim_line.diag_cd_1 sourced from CAPS.transaction.icd_diag_1, no transformation applied").
-
-Is there a data dictionary mapping HEDIS data elements to source fields? Without this, semantic validation findings cannot be remediated — the plan doesn't know which upstream field to fix.
-
-**Data Governance Policy Maturity**
-
-Is there a data governance function — council, CDO, or equivalent — with authority over data quality standards across HEDIS-relevant systems? Or is quality governance fragmented by application owner?
-
-Are there documented data quality SLAs for HEDIS-relevant data feeds? Vendor contractual obligations for conformant LOINC codes, latency SLAs for EHR feeds?
-
-Is there a year-round change control process for ETL rules, value set bindings, and measure logic? Absence of post-lock change documentation reflects a deeper governance failure — the absence of year-round change governance. DQAR assesses the governance capability, not just the audit-season artifact.
-
-**Maturity Rubric — DAMA-DMBOK Anchored, CMMI-DMM Structured**
-
-The DQAR Level 6 maturity rubric uses the CMMI-DMM five-level progression as its structural backbone and is grounded in DAMA-DMBOK knowledge areas for data governance, MDM, metadata management, data quality, and data operations. It is calibrated specifically for payer HEDIS pipeline operations — not generic enterprise data management. This is Sonian proprietary IP with no licensing dependency on CMMI Institute (now merged with ISACA) or any other licensed framework.
-
-DAMA-DMBOK provides the knowledge area taxonomy your CDO buyers already know. CMMI-DMM provides the maturity ladder structure. DQAR operationalizes both for the specific failure modes, tools, and regulatory deadlines of payer HEDIS operations.
-
-Five DAMA-DMBOK knowledge areas assessed per engagement:
-
-| CMMI-DMM Level | Plain language (DQAR) | Typical plan finding |
+| Level | Sonian label | What it means in practice |
 |---|---|---|
-| 1 — Initial | Ad hoc — no documented processes, tribal knowledge | Most plans at score 1 on metadata, many at 1 on MDM |
-| 2 — Repeatable | Reactive — processes exist for some areas, not enterprise-governed | Common for governance where HEDIS team has processes but no CDO authority |
-| 3 — Defined | Governed — documented, standardized, applied consistently across HEDIS pipeline | MY2029 readiness floor |
-| 4 — Managed | Measured — quality metrics tracked, SLAs in place, vendor accountability | Where leading payers with strong CDO functions are |
-| 5 — Optimizing | Continuous improvement — quality embedded in pipeline, automated monitoring | Future state — UC2 monitoring service enables this level |
+| **1** | **Ad hoc** | No documented process. Outcomes depend on individual heroics and tribal knowledge. Reactive and unstable. |
+| **2** | **Emerging** | Some repeatable practice exists in pockets, usually by application or team. Not enterprise-governed; results vary by who's doing the work. |
+| **3** | **Governed** | Documented, standardized, and applied consistently across the data estate with clear ownership. **← MY2029 readiness floor.** |
+| **4** | **Measured** | Quality and performance tracked against SLAs; vendor and internal accountability enforced with metrics. |
+| **5** | **Self-Sustaining** | Governance embedded and automated; continuous monitoring drives improvement without a project pushing it. |
 
-Most plans assessed will score 1–2 across MDM and metadata, 2–3 on governance. Level 3 is the MY2029 readiness floor. The UC2 monitoring subscription tracks maturity progression toward Level 3 each quarter.
+#### Five Capability Pillars + the Computable Data Governance Overlay
 
-**Note:** DAMA-DMBOK reference slides will be uploaded to the DQAR Shared KB project to anchor rubric development. Do not author the detailed rubric until DAMA materials are available in the project KB.
+The CDG-MM scores five capability pillars, with Computable Data Governance layered *across* them as an overlay — not as a sixth pillar. Together the five pillars represent roughly **70–80% of the core capability surface of a typical data governance platform** — the entire "understand and trust your data" stack. The one core capability deliberately **out of scope** is access control / security / policy enforcement, which in a payer FHIR architecture belongs to the plan's IAM/security layer, not Sonian's independent validation layer.
+
+1. **Data Inventory & Catalog** — a searchable inventory of data assets, systems, and feeds. *"You cannot manage what you cannot see."*
+2. **Metadata Management** — technical + business metadata: definitions, ownership, context, and active propagation of classification tags downstream.
+3. **Master & Reference Data Management (MDM)** — consistent, governed definitions of the entities shared across the organization.
+4. **Data Quality** — continuous definition, measurement, and remediation of fitness-for-use, on data at rest *and* in flight. At maturity, quality is *computed* — schema/terminology conformance run by an engine, dimension scores derived from PIQI-style rules — not assessed by hand.
+5. **Data Lineage & Provenance** — end-to-end traceability from source system through transformation to consumption, ideally at field/column level, with provenance metadata at every hop.
+
+The **Computable Data Governance overlay** expresses how each pillar is governed: decision rights, accountability, policy, and controls, in a **decentralized, catalog-as-single-source-of-truth, governed-at-ingestion** posture (echoing the L.A. Care lesson — govern quality, metadata, and lineage at the earliest and cheapest point to catch error). It is not scored separately at the cell level; instead a single **Governance Index** is *derived* from cells already scored (see below), so the overlay stays intact while still answering "how governed are we?" with one number.
+
+#### Three Assessment Dimensions → the 15-Cell Matrix
+
+Each pillar is scored across three dimensions — a reframing of the classic people/policy/technology lens that *is* the governance overlay made measurable:
+
+- **People & Accountability** — Are roles, stewardship, and decision rights defined and filled? Who is accountable when this pillar fails?
+- **Policy & Standards** — Are the rules documented, official, and enforced (not merely written)?
+- **Technology & Automation** — How capable and automated is the tooling, and how consistently is it used? At the upper levels this means *computable* instruments — conformance engines and computed quality scores.
+
+**The matrix: 5 pillars × 3 dimensions = 15 scored cells, each rated 1–5 against the ladder.** Governance lives in two of the three dimensions — **People & Accountability** and **Policy & Standards** — which feed the Governance Index. The full Level 1–5 descriptor text for all 15 cells, plus the per-cell guiding questions, is maintained in the standalone **CDG-MM** reference document in the DQAR Shared KB.
+
+#### Payer Calibration — What "Good" Means per Pillar
+
+**Pillar 1 — Inventory & Catalog.** Every upstream vendor feed (EHR, lab, pharmacy, supplemental) and FHIR resource type is registered with a manifest. At maturity, new assets auto-register at onboarding and unregistered feeds cannot enter the pipeline.
+
+**Pillar 2 — Metadata Management.** Does a data catalog (Collibra, Alation, dbt docs) cover HEDIS-relevant assets, and does it reach the FHIR pipeline or only the BI/reporting layer? Are transformation rules documented at field level — `EDW.claim_line.diag_cd_1 ← CAPS.transaction.icd_diag_1`, not "claims flow from CAPS to EDW"? Is there a data dictionary mapping HEDIS data elements to source fields? Without it, semantic-validation findings can't be remediated — the plan doesn't know which upstream field to fix.
+
+**Pillar 3 — MDM.** The three payer master domains that move measure rates:
+- *Member MDM* — identity resolution across enrollment sources, retroactive disenrollment handling, product-line transitions. Failures corrupt denominator completeness. Is there a governed member identity matching process connected to HEDIS eligible-population logic? Are enrollment edge cases handled by a governed rule set or ad hoc?
+- *Provider MDM* — specialty, network status, TIN-to-NPI mapping, attribution logic. Failures corrupt provider-attributed denominators and clinical data completeness by provider. Is the provider directory governed against NPPES? Is specialty mapping version-controlled?
+- *Terminology MDM* — SNOMED, LOINC, RxNorm, NDC bindings governed at platform level or per-application? Is the VSD refresh an annual governed process with a documented owner and change-control record?
+
+**Pillar 4 — Data Quality.** Measured across the nine DQ dimensions (accuracy, semantics, structure, completeness, uniqueness, timeliness, reasonableness, consistency, integrity) and Sonian's five-level semantic validation; quality governed at ingestion, not the warehouse tail. At the top of the ladder, scores are *computed* by engine — schema/terminology conformance and PIQI-style rules — covering data at rest **and** in flight.
+
+**Pillar 5 — Lineage & Provenance.** Field-level lineage carried through to the FHIR surface with AuditEvent provenance — not system-level hand-waving. At maturity, column/field-level lineage is auto-built across sources and reaches the FHIR layer, not just BI.
+
+**The governance overlay in practice.** Is there a data governance function — council, CDO, or equivalent — with authority over data-quality standards across HEDIS-relevant systems, or is governance fragmented by application owner? Are there documented data-quality SLAs for HEDIS-relevant feeds (conformant-LOINC vendor obligations, EHR-feed latency)? Is there a year-round change-control process for ETL rules, value-set bindings, and measure logic? Absence of post-lock change documentation reflects the deeper failure — no year-round change governance. These are precisely the People & Accountability and Policy & Standards questions the Governance Index re-reads across all five pillars.
+
+#### The Governance Index (Derived)
+
+The **Governance Index** is the mean of the two governance dimensions — the ten **People & Accountability** and **Policy & Standards** cells across all five pillars — reported on the same 1–5 scale alongside the five pillar averages.
+
+> **Governance Index** = mean(all 5 People & Accountability scores + all 5 Policy & Standards scores) — one number, 1–5.
+
+Because it re-reads cells already scored rather than adding new questions, it never double-counts, and a plan can read as weakly governed (low index) while still scoring well on a technical pillar like lineage. This lets an assessment say, e.g., *"Governance Index 1.6 — weak decision rights and unenforced policy — while Lineage sits at 3.4"*: the structural root cause and the technical state, side by side. The **Level 3 = MY2029 floor** rule applies to the index too — a Governance Index below 3 is the headline gap for most plans.
+
+#### Scoring, Baseline & Roadmap
+
+Record 1–5 in each of the 15 cells; average each pillar (row) and each dimension (column). The grand picture is a 5×3 heat map, with the two governance columns feeding the Governance Index.
+
+| Pillar | People & Accountability ▓ | Policy & Standards ▓ | Technology & Automation | **Pillar avg** |
+|---|---|---|---|---|
+| Inventory & Catalog | _ | _ | _ | _ |
+| Metadata Management | _ | _ | _ | _ |
+| MDM (master/reference) | _ | _ | _ | _ |
+| Data Quality | _ | _ | _ | _ |
+| Lineage & Provenance | _ | _ | _ | _ |
+| **Dimension avg** | _ | _ | _ | |
+
+**Roadmap mechanic.** At baseline, leadership sets a target per pillar **and a target Governance Index** (mix of short/long term). Plot **baseline vs. goal** on a per-pillar scatter, with the Governance Index as its own tracked line; re-score on a set cadence (at least annually for the program; quarterly for the UC2 monitoring subscription) to show the climb. **Level 3 across the board = MY2029 digital-quality readiness floor.** Most plans baseline at 1–2 on MDM and metadata, with a Governance Index of 2–3.
+
+#### Coverage Claim & Clean-Room Provenance (GTM)
+
+**Defensible sales phrasing:** *"The five pillars the CDG-MM scores — inventory/catalog, metadata, master & reference data, data quality, and lineage — cover roughly 70–80% of the core capabilities of a typical data governance platform: the entire 'understand and trust your data' stack. The one core capability we intentionally leave out is access control and security enforcement, which in a payer FHIR architecture belongs to the plan's identity and security layer, not the independent validation layer."* Avoid stating a single hard percentage as fact — the 70–80% is Sonian's own estimate from cross-referencing the published core-capability lists of the major data-governance platforms.
+
+**Clean-room IP / licensing note.** The CDG-MM uses no content or branding from any subscription-gated maturity model (including CMMI-DMM / the CMMI Institute, now merged with ISACA) and no copied third-party assessment text. Some publicly posted maturity assessments carry restrictive licenses (e.g., Creative Commons NonCommercial-NoDerivs) that forbid both commercial use and adaptation and are therefore **not** a permissible base. CDG-MM reuses only uncopyrightable structural ideas — a 1–5 ladder and a capability × dimension grid — with all level descriptors and guiding questions in original Sonian wording. This is what lets Sonian sell and adapt it freely; bodies of knowledge such as DAMA-DMBOK and DGI are used only as *vocabulary the CDO recognizes*. Recommended: have IP counsel confirm before external publication.
+
+**Note:** The full 15-cell CDG-MM descriptor matrix and payer-calibrated readiness survey (one question per cell) live in the standalone CDG-MM reference document. This summary integrates the model's structure, scoring, and GTM framing; the per-cell descriptors are maintained there to avoid drift between the two artifacts.
 
 ---
 
@@ -291,38 +319,60 @@ Eight HEDIS measures still permitted Hybrid reporting as of MY2025. The table be
 
 ## AuditEvent Provenance Architecture
 
-### The Minimum Viable Provenance Pattern
-Extend the standard FHIR AuditEvent at ingest time with seven fields. Written once per resource, at write time, by the pipeline. EXT 1–5 come from the source-type inference algorithm; EXT 6–7 are set once by the pipeline orchestrator before the resource loop begins.
+### The Seven-Extension Provenance Pattern
+Extend the standard FHIR AuditEvent at ingest time with seven extensions, written once per resource, at write time, by the pipeline. Extensions 1–5 are produced by the **source-type inference algorithm** (it reads US Core MUST SUPPORT signals where it can and falls back through a priority ladder otherwise); extensions 6–7 are set by the pipeline orchestrator at run time.
 
 ```json
 "extension": [
   { "url": "http://Sonian.io/fhir/ext/source-type", "valueCode": "clinical_ehr" },
   { "url": "http://Sonian.io/fhir/ext/source-system-id", "valueString": "epic-prod-org-447" },
-  { "url": "http://Sonian.io/fhir/ext/source-feed-id", "valueString": "epic-prod-org-447" },
+  { "url": "http://Sonian.io/fhir/ext/source-feed-id", "valueString": "ehr-epic-447-clinical" },
   { "url": "http://Sonian.io/fhir/ext/source-inference-confidence", "valueCode": "asserted" },
   { "url": "http://Sonian.io/fhir/ext/ecds-ssor", "valueCode": "EHR/PHR" },
-  { "url": "http://Sonian.io/fhir/ext/ingest-pipeline-id", "valueString": "dqar-20251014-001/epic-prod-org-447/Condition.ndjson-chunk-003" },
-  { "url": "http://Sonian.io/fhir/ext/ol-run-id", "valueString": "550e8400-e29b-41d4-a716-446655440000" }
+  { "url": "http://Sonian.io/fhir/ext/ingest-pipeline-id", "valueString": "interbox-job-20251014-ehr-001" },
+  { "url": "http://Sonian.io/fhir/ext/ol-run-id", "valueString": "a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b5c6d" }
 ]
 ```
 
-`ecds-ssor` (EXT 5) is derived from `source-type` (EXT 1) via a deterministic SSoR mapping rule. NCQA's four-category SSoR vocabulary: `EHR/PHR` | `Administrative` | `Clinical Registry/HIE` | `Case/Disease Mgmt`. Null when source-type = `unknown` — triggers a Tier 1 governance finding.
+| EXT | Field | Set by | Notes |
+|---|---|---|---|
+| 1 | `source-type` | inference algorithm | Expanded vocabulary (see below) |
+| 2 | `source-system-id` | inference algorithm | Canonical source identifier (e.g., `epic-prod-org-447`) |
+| 3 | `source-feed-id` | inference algorithm | Per-feed identifier; `undeclared-*` when not in the manifest |
+| 4 | `source-inference-confidence` | inference algorithm | `asserted` / `high` / `low` / `unknown` |
+| 5 | `ecds-ssor` | inference algorithm | Derived from `source-type` by the deterministic SSoR mapping rule |
+| 6 | `ingest-pipeline-id` | orchestrator | Ingest job identifier |
+| 7 | `ol-run-id` | orchestrator | OpenLineage RunEvent UUID — an ingest batch tag, **not** a join key |
 
-`ol-run-id` (EXT 7) is a UUID v4 set once by the pipeline orchestrator per ingest run and stamped on every AuditEvent written during that run. **It is an ingest batch tag, not a join key into a lineage graph.** OpenLineage `RunEvent`s (`START`/`COMPLETE`/`FAIL`) are emitted directly to OpenMetadata — Marquez has been dropped from the architecture. OpenMetadata builds and holds the actual lineage graph from each RunEvent's declared inputs/outputs; `ol-run-id` only correlates a batch of AuditEvents to the RunEvent that produced them. Lineage emission is best-effort/non-fatal — a failed emission does not block ingest. Required for DQAR provenance maturity Level 3+.
+**Source-type vocabulary (expanded).** The old four-value declaration (`ecds-ehr` / `ecds-administrative` / `ecds-lab` / `ecds-pharmacy`) is replaced by a richer vocabulary split into two tiers:
+- **Tier A — structurally detectable** (inference can resolve without a manifest): `clinical_ehr`, `administrative_claims`, `administrative_encounter`, `pharmacy_pbm`, `clinical_lab` (a US Core `Observation.category` declaration, not a guess), `payer_exchange`, `clinical_immunization_registry`.
+- **Tier B — manifest / `meta.source` declared only** (structurally indistinguishable from `clinical_ehr`): `clinical_phr`, `pharmacy_specialty`, `clinical_hie`, `clinical_registry`, `case_management`, `disease_management`.
+
+A Tier B type that defaults to `unknown` because it is neither in the feed manifest nor carries a `meta.source` URI is itself a **Tier 1 governance finding** — the algorithm's limitation *is* the evidence of a metadata-management gap. (Full priority ladder and code in `dqar-05-source-inference-algorithm.md`.)
+
+**SSoR mapping (EXT 5).** `ecds-ssor` is derived from `source-type` by a deterministic rule into the four NCQA ECDS SSoR categories — **EHR/PHR**, **Administrative**, **Clinical Registry/HIE**, **Case/Disease Mgmt** — or `null` for `unknown` (which triggers the finding). Note: although NCQA removed the SSoR *submission* requirement for ECDS as of MY2026, the plan still benefits from internal SSoR attribution for provenance and risk stratification.
+
+**Provenance confidence as a maturity metric (EXT 4).** The distribution of resources across confidence tiers is a direct provenance-maturity score requiring no extra testing: >80% `asserted` reads as Governed (no finding); 50–80% high+asserted as Adequate (Tier 3 advisory); <50% high+asserted as inference-dependent (Tier 3 finding); >20% `unknown` as a material gap (Tier 3 HIGH severity, MY2029 risk).
+
+**Lineage join (EXT 7).** `ol-run-id` tags each resource with the OpenLineage RunEvent that produced it. **RunEvents are emitted directly to OpenMetadata (Marquez has been dropped)**, which builds the lineage graph from each RunEvent's declared inputs and outputs. `ol-run-id` is an ingest batch tag, not a foreign key — the graph is assembled in OpenMetadata, not by joining on this value. Valid `ol-run-id` coverage that resolves in the OpenLineage graph is required for DQAR provenance-maturity Level 3+.
 
 ### Measure Attribution Join
 ```
-member flag → resource ID → AuditEvent.entity.reference → ecds-ssor + source-system-id
+member flag → resource ID → AuditEvent.entity.reference → ecds-ssor + source-system-id + source-feed-id
 ```
+
+The seven-extension metadata also makes Domain 3 risk stratification a single SQL-on-FHIR query against the ingest metadata — per `source-system-id`/`source-feed-id`: resource counts, source types, SSoR categories, and which measures they feed — instead of a multi-day manual reconstruction from ETL documentation. That contrast is a concrete demonstration of the Sonian/Health Samurai infrastructure advantage over an incumbent vendor that never exposes this metadata to the plan.
 
 ### What AuditEvent Logging Is and Is Not
 - ✅ Closes HIPAA audit control gap (45 CFR §164.312(b))
 - ✅ Establishes FHIR server transaction log baseline
-- ✅ Provides write-time source attribution for ingest pipeline resources
+- ✅ Provides write-time source attribution (inferred or asserted) for ingest pipeline resources
 - ✅ Enables automated risk stratification by source feed — no manual inventory reconstruction
+- ✅ Confidence tier and `unknown`-rate are computed provenance-maturity metrics
 - ❌ Not a current CMS or NCQA mandate
 - ❌ Does not automatically provide measure-level execution provenance
 - ❌ Does not cover resources created outside the managed ingest pipeline
+- ❌ Cannot distinguish Tier B source types without a feed manifest or `meta.source` — undeclared Tier B data defaults to `unknown`
 
 **Regulatory status:** No specific CMS or NCQA mandate requires AuditEvent logging today. Position as Digital Readiness Gap (Tier 3), not Governance Gap (Tier 1).
 
@@ -330,7 +380,7 @@ member flag → resource ID → AuditEvent.entity.reference → ecds-ssor + sour
 
 ### Upstream Migration of AuditEvent Metadata — The Advisory Opportunity
 
-The DQAR sandbox demonstrates AuditEvent metadata capture at Aidbox ingest time (Stage 3 of the UC1 pipeline). This is the starting point — not the end state.
+The DQAR sandbox demonstrates AuditEvent metadata capture at Aidbox ingest time (Stage 5 of the UC1 pipeline). This is the starting point — not the end state.
 
 **The advisory insight:** With Sonian guidance, and using the Aidbox AuditEvent ingest demo as proof of concept, plans can migrate the metadata capture point progressively upstream — from the Sonian sandbox to the plan's own FHIR infrastructure, and ultimately to the plan's FHIR vendor API bulk ingestion point. This means:
 
@@ -361,20 +411,20 @@ The upstream migration path is an Sonian advisory deliverable — it is not some
 
 ### Velox Metadata Integration — Data Source Inventory Push/Pull
 
-The AuditEvent seven-extension metadata captured at ingest has a natural integration point with the Velox data source inventory. Velox's platform-side view of a plan's data sources is more useful when it reflects the actual per-feed resource counts, source types, and ECDS SSoR declarations that the AuditEvent metadata tracks.
+The AuditEvent seven-extension metadata captured at ingest has a natural integration point with the Velox data source inventory. Velox's platform-side view of a plan's data sources is more useful when it reflects the actual per-feed resource counts, source types, and ECDS SSoR categories that the AuditEvent metadata tracks.
 
 **Two integration directions are viable:**
 
 **Push — Aidbox → Velox:**
-After each ingest run, a lightweight export of the AuditEvent metadata summary (per `source-system-id`: resource type counts, source type distribution, `ecds-ssor` breakdown) is pushed to the Velox data source inventory. Velox business users see a live, queryable inventory of what's in the FHIR pipeline — attributed by feed — without needing SQL access to Aidbox.
+After each ingest run, a lightweight export of the AuditEvent metadata summary (per `source-system-id`/`source-feed-id`: resource type counts, source type distribution, `ecds-ssor` breakdown, and confidence-tier mix) is pushed to the Velox data source inventory. Velox business users see a live, queryable inventory of what's in the FHIR pipeline — attributed by feed — without needing SQL access to Aidbox.
 
 ```
 Aidbox AuditEvent metadata (per feed summary)
     → scheduled export job
         → Velox data source inventory API
             → Velox business user dashboard: "EHR feed epic-prod-org-447
-               contributed 142,847 Condition resources tagged EHR/PHR
-               last updated 2025-10-14"
+               contributed 142,847 Condition resources tagged clinical_ehr
+               (SSoR: EHR/PHR), last updated 2025-10-14"
 ```
 
 **Pull — Velox → Aidbox:**
@@ -450,7 +500,7 @@ Critically: **each HEDIS measure run is a vendor-billed event.** Plans pay per r
 
 **2. Lineage visibility disappears at the vendor ETL handoff**
 
-When a plan's data crosses into the HEDIS vendor's ETL pipeline, the plan loses visibility and control. Every transformation hop from that point forward — source normalization, code mapping, measure logic application, final report production — happens inside the vendor's black box. The plan receives outputs. It does not receive lineage.
+When a plan's data crosses into the HEDIS vendor's ETL pipeline, the plan loses visibility and control. Every transformation hop from that point forward — source normalization, code mapping, measure logic application, ISR/IDR production — happens inside the vendor's black box. The plan receives outputs. It does not receive lineage.
 
 This means:
 - The plan cannot trace a member's measure flag back to its originating source record through the vendor's transformations
@@ -475,7 +525,7 @@ When the HEDIS vendor both produces the data and runs the measure calculation, t
 | FHIR infrastructure ownership | Vendor-hosted, plan has limited access | Plan-owned or plan-controlled Aidbox instance |
 | ETL costs | Annual recurring, often opaque pricing | One-time implementation, plan-controlled thereafter |
 | Per-HEDIS-run cost | Billed per run — validation, parallel testing, remediation, submission all cost | No per-run cost against plan-owned infrastructure |
-| Measure reporting | Vendor produces final submission reports | Plan runs SQL on FHIR queries; Sonian validates |
+| Measure reporting | Vendor produces ISR/IDR | Plan runs SQL on FHIR queries; Sonian validates |
 | Data lineage visibility | Terminates at vendor ETL handoff — plan cannot trace beyond that boundary | End-to-end lineage from source system through Aidbox ingest; AuditEvent metadata at every hop |
 | Lineage traceability point | Downstream of vendor ETL — too late for early error detection | Moves upstream to plan's own FHIR API bulk ingestion point with Sonian advisory |
 | CQL engine | Vendor-proprietary, locked | Engine-agnostic; plan points data at any FHIR-capable CQL runtime |

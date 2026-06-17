@@ -185,6 +185,53 @@ def get_source_from_meta(resource):
 
 ---
 
+## Priority 2.5 — identifier.system URI (asserted confidence)
+
+Between `meta.source` and determinative resource types. Applies to any FHIR resource that carries an `identifier[]` array.
+
+**Why this priority exists:**
+
+PHI redaction in `dqar-client-kit` hashes `identifier.value` but preserves `identifier.system` intact. The system URI is a namespace declaration by the originating source system — it is not patient-identifying. It survives the redaction boundary and arrives in the egress package as an authoritative signal for which source system produced the resource.
+
+This is the primary resolution path for `source_system_id` (EXT 2) in extracts where `meta.source` is not populated. For most Encounters from EHR systems, the `identifier.system` URI names the originating EHR (Epic, Athena, Cerner). Two resources from the same source system share an identical `identifier.system` URI and therefore hash to the same `source_system_id` — enabling stable grouping in risk stratification.
+
+**Source-type resolution:**
+
+The same URI pattern matching used in Priority 2 (`meta.source`) is applied to `identifier.system`. This allows Priority 2.5 to resolve Tier B types when the identifier system URI is an explicit declaration (e.g. `https://commonwell.org/patient-id` → `clinical_hie`).
+
+**Non-informative systems are filtered:**
+
+Synthetic or placeholder URIs (`http://example.org/mrn`, Synthea, `urn:ietf:rfc:3986`) are excluded before pattern matching. Resources with only non-informative identifier systems fall through to Priority 3.
+
+**Confidence:**
+- URI pattern recognized → `asserted`
+- URI present and non-filtered but pattern unrecognized → `medium` (EHR default; system URI preserved as `source_system_id`)
+
+```python
+def get_source_from_identifier_system(resource):
+    """
+    Priority 2.5: identifier.system URI → source_system_id + source_type.
+    Non-informative systems (example.org, Synthea, etc.) are skipped.
+    First informative URI wins.
+    """
+    for ident in resource.get('identifier', []):
+        system = ident.get('system', '')
+        if not system or is_non_informative(system):
+            continue
+        source_type = _uri_to_source_type(system)
+        sys_id = 'id-sys-' + sha256(system)[:12]
+        if source_type:
+            return {'source_type': source_type, 'source_system_id': sys_id,
+                    'source_feed_id': sys_id, 'confidence': 'asserted',
+                    'inference_basis': f'identifier.system={system}'}
+        return {'source_type': 'clinical_ehr', 'source_system_id': sys_id,
+                'source_feed_id': sys_id, 'confidence': 'medium',
+                'inference_basis': f'identifier.system={system} (unrecognized-pattern → clinical_ehr default)'}
+    return None
+```
+
+---
+
 ## Priority 3 — Resource Type Inference (high confidence)
 
 Determinative resource types require no signal beyond `resourceType`. These are Tier A types — structurally unambiguous.
@@ -490,6 +537,12 @@ def infer_source_metadata(resource, feed_manifest=None, cluster_registry=None):
     if result:
         return _build_result(resource, result)
 
+    # Priority 2.5: identifier.system URI — asserted source_system_id from identifier namespace
+    # PHI redaction preserves identifier.system intact; direct authoritative signal.
+    result = get_source_from_identifier_system(resource)
+    if result:
+        return _build_result(resource, result)
+
     # Priority 3: Determinative resource type — Tier A only
     result = get_source_from_resource_type(resource)
     if result:
@@ -555,23 +608,14 @@ def _build_result(resource, inferred):
 The proportion of resources at each confidence tier is a direct provenance maturity metric requiring no additional testing.
 
 ```sql
--- Provenance coverage report (Aidbox PostgreSQL)
+-- Provenance coverage report — queries sof.audit_event_metadata (requires $materialize)
 SELECT
-  ext_conf.value->>'valueCode'    AS confidence_tier,
-  ext_src.value->>'valueCode'     AS source_type,
-  ext_feed.value->>'valueString'  AS feed_id,
-  COUNT(*)                        AS resource_count,
+  aem.confidence         AS confidence_tier,
+  aem.source_type,
+  aem.source_feed_id     AS feed_id,
+  COUNT(*)               AS resource_count,
   ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (), 1) AS pct
-FROM auditevent ae
-CROSS JOIN LATERAL jsonb_array_elements(ae.resource->'extension') ext_conf
-CROSS JOIN LATERAL jsonb_array_elements(ae.resource->'extension') ext_src
-CROSS JOIN LATERAL jsonb_array_elements(ae.resource->'extension') ext_feed
-WHERE ext_conf.value->>'url' = 
-  'http://Sonian.io/fhir/ext/source-inference-confidence'
-AND ext_src.value->>'url' = 
-  'http://Sonian.io/fhir/ext/source-type'
-AND ext_feed.value->>'url' = 
-  'http://Sonian.io/fhir/ext/source-feed-id'
+FROM sof.audit_event_metadata aem
 GROUP BY 1, 2, 3
 ORDER BY resource_count DESC;
 ```
