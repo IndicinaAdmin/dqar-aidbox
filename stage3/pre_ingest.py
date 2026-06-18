@@ -159,11 +159,12 @@ def build_ingest_context(package_path: str) -> IngestContext:
 
 
 _FRAMEWORK_TO_SOURCE_TYPE = {
-    "hapi":       "clinical_ehr",
-    "blaze":      "clinical_ehr",
-    "azure-fhir": "clinical_ehr",
-    "smile-cdr":  "clinical_ehr",
+    "hapi":              "clinical_ehr",
+    "blaze":             "clinical_ehr",
+    "azure-fhir":        "clinical_ehr",
+    "smile-cdr":         "clinical_ehr",
     "intersystems-iris": "clinical_ehr",
+    "medplum":           "clinical_ehr",
 }
 
 

@@ -110,7 +110,7 @@ def _uri_to_source_type(uri: str) -> str | None:
     if any(k in u for k in ["claims", "adjudic", "eob", "billing"]):
         return "administrative_claims"
     if any(k in u for k in ["epic", "cerner", "meditech", "allscripts",
-                              "athena", "ehr", "emr"]):
+                              "athena", "ehr", "emr", "medplum"]):
         return "clinical_ehr"
     # IIS / immunization registry URIs
     if any(k in u for k in ["iis", "immunization-registry",
