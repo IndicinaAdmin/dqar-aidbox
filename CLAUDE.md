@@ -1,4 +1,4 @@
-# CLAUDE.md — dqar-aidbox
+# CLAUDE.md — dqar-aidbox-databricks-kit
 *Digital Quality Audit Readiness — Aidbox-Side Sandbox*
 *Last updated: June 2026 | Confidential — Internal*
 
@@ -40,7 +40,7 @@ In CI/prod: install from private package registry.
 ## Architecture Position
 
 ```
-CLIENT ENVIRONMENT (dqar-client-kit)         THIS REPO (dqar-aidbox)
+CLIENT ENVIRONMENT (dqar-client-kit)         THIS REPO (dqar-aidbox-databricks-kit)
 ────────────────────────────────           ────────────────────────────────
 Stage 1  Conformance testing          →    S3 presigned PUT URL (web/presign.py)
 Stage 2  PHI redaction (Path B)            ↓
@@ -76,7 +76,7 @@ OpenLineage `RunEvent`s go directly to OpenMetadata. See `shared/lineage.py`.
 ## Project Structure
 
 ```
-dqar-aidbox/
+dqar-aidbox-databricks-kit/
 ├── stage3/
 │   ├── provision.py        # Per-engagement Aidbox org + OAuth client provisioning
 │   ├── load.py             # S3 download → inference → atomic bundle POST → lineage emit

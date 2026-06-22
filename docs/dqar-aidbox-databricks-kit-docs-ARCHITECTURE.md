@@ -1,0 +1,143 @@
+# dqar-aidbox-databricks-kit Architecture
+
+**dqar-aidbox-databricks-kit documentation**  
+Version: June 2026
+
+---
+
+## Role in the Three-Repo System
+
+```
+dqar-contracts          shared interface package (versioned dependency)
+        │
+        ├──────────────┬───────────────────────────┐
+        ▼              ▼                           ▼
+dqar-client-kit   dqar-aidbox-databricks-kit   sql-on-fhir-libraries
+ (generates)        (this repo — loads/emits)     (runs measures)
+```
+
+This kit sits between Aidbox (FHIR source of truth) and Databricks (analytics), with lineage flowing to OpenMetadata. It **consumes** client-kit's outputs (UC properties) and **produces** provenance (AuditEvents) and lineage (RunEvents). It does not run conformance checks or generate UC property values — that is client-kit's job.
+
+---
+
+## Three Responsibilities, Three Linkages
+
+The kit's whole purpose is to maintain three consistent linkages between a FHIR resource, its lineage, and its catalog metadata:
+
+```
+                         ┌─────────────────────────────────────────┐
+                         │            FHIR resource                 │
+                         │         (in Aidbox, per-resource)        │
+                         └───────────────┬─────────────────────────┘
+                                         │
+        ┌────────────────────────────────┼────────────────────────────────┐
+        ▼                                ▼                                ▼
+ AuditEvent EXT 6+7              OpenLineage RunEvent              UC table properties
+ (per-resource, write-time)      (per-batch, → OpenMetadata)      (per-table, → Databricks)
+   ingest-pipeline-id              runId == EXT 7 ol-run-id          dqar_source_feed_id
+   ol-run-id  ──────────────────▶  DQARIngestFacet.fieldMappings     dqar_source_system_id
+                                   inputs → outputs graph            dqar_source_type / ssor
+                                                                     dqar_conformance_* / findings_*
+```
+
+| Linkage | Granularity | Owner | Where it lives |
+|---|---|---|---|
+| AuditEvent EXT 6 + 7 | per-resource | orchestrator | Aidbox |
+| OpenLineage RunEvent | per-batch | orchestrator | OpenMetadata |
+| UC table properties | per-table | client-kit (generated) / this kit (loaded) | Databricks UC |
+
+The three must agree: EXT 7 `ol-run-id` == RunEvent `runId`; `DQARIngestFacet.sourceFeedId` == UC `dqar_source_feed_id`. Drift between any pair is a finding.
+
+---
+
+## Data Flow (one ingest batch)
+
+```
+1. Orchestrator: start_run()  → run_id (UUID)
+2. Orchestrator: build IngestContext(ingest_pipeline_id, ol_run_id=run_id)
+3. For each resource:
+      assembler.pair(resource) → transaction bundle (resource + AuditEvent[EXT6,EXT7])
+      POST bundle to Aidbox    (atomic — one bundle)
+4. Orchestrator: complete_run(run_id, outputs + DQARIngestFacet(fieldMappings))
+                 → OpenMetadata assembles input→output + field-level graph
+5. (After client-kit assessment) loader.load_from_json(uc-properties.json)
+                 → Databricks UC tables tagged with dqar_* properties
+```
+
+Steps 1–4 are the ingest-time provenance + lineage path. Step 5 is the catalog-side load, run after a client-kit conformance assessment produces the properties.
+
+---
+
+## Components
+
+| Component | Responsibility | Doc |
+|---|---|---|
+| `OpenLineageEmitter` | START / COMPLETE / FAIL RunEvents to OpenMetadata; builds `DQARIngestFacet` | `OPENLINEAGE_EMISSION.md` |
+| `IngestContext` | Carries `ingest-pipeline-id` + `ol-run-id` for the batch | `AUDITEVENT_PROVENANCE.md` |
+| `AuditEventBuilder` | Builds the two-extension AuditEvent for a resource | `AUDITEVENT_PROVENANCE.md` |
+| `TransactionBundleAssembler` | Pairs resource + AuditEvent into one transaction bundle; POSTs to Aidbox | `AUDITEVENT_PROVENANCE.md` |
+| `UCPropertiesLoader` | Applies client-kit's UC properties to Databricks (SDK) | `UC_PROPERTIES_LOADING.md` |
+| `terraform/databricks_uc_properties/` | IaC path for CAB-reviewed property application | `UC_PROPERTIES_LOADING.md` |
+
+---
+
+## The Lineage Stack (three tools, not four)
+
+- **OpenLineage** — backbone protocol (event format)
+- **OpenMetadata** — catalog + lineage backend (the graph lives here)
+- **Aidbox** — FHIR source of truth + write-time AuditEvents
+
+Dropped: **Marquez** as a deployed service (RunEvents go directly to OpenMetadata) and the **`lineage_resource_map`** join table (its only purpose was a join key to Marquez). The graph is assembled by OpenMetadata from declared inputs/outputs; `ol-run-id` is a lookup key into that graph, not a relational join key.
+
+---
+
+## Why Source Attribution Is Not in the AuditEvent
+
+A deliberate boundary worth restating, since it shaped the whole repo:
+
+- AuditEvent carries only **EXT 6 + 7** — ingest-run identity and lineage-run linkage. Lean, per-resource, write-time.
+- **Source/feed/type/SSoR attribution** lives in **Unity Catalog table properties** (`dqar_source_*`), generated by client-kit. Per-table, catalog-side.
+- There is **no source-inference algorithm**. A resource whose feed can't be resolved against the manifest is `UNKNOWN` = Tier 1 finding, surfaced by client-kit's manifest matching — not by an AuditEvent extension.
+
+The `DQARIngestFacet` mirrors `sourceFeedId`/`sourceSystemId` into the lineage graph so the graph is self-describing, but the authoritative per-table attribution is the UC property. Two views, one truth, kept consistent.
+
+---
+
+## Integration Points
+
+### From `dqar-client-kit`
+- Consumes `uc-properties.json` → loaded to Databricks
+- Shares types via `dqar-contracts` (the versioned interface package)
+
+### To OpenMetadata
+- Emits OpenLineage RunEvents with `DQARIngestFacet`
+
+### To Databricks Unity Catalog
+- Applies `dqar_*` table properties (SDK or Terraform)
+
+### To Aidbox
+- Writes resource + AuditEvent transaction bundles
+
+### With `sql-on-fhir-libraries`
+- That repo runs HEDIS measures against the FHIR data this kit has tagged with provenance; lineage from measure → ViewDefinition → source is traceable through the OpenMetadata graph this kit populates
+
+---
+
+## Dependencies
+
+| Dependency | Purpose | Optional? |
+|---|---|---|
+| `dqar-contracts>=1.0.0,<2.0.0` | Shared interface types | No |
+| `requests` | Aidbox + OpenMetadata HTTP | No |
+| `openlineage-python` | RunEvent construction | Optional (`[openlineage]`) |
+| `databricks-sdk>=0.10.0` | UC properties load | Optional (`[databricks]`) |
+
+---
+
+## Best Practices
+
+1. **Maintain the three linkages.** EXT 7 == RunEvent runId; facet feed-id == UC feed-id. A nightly consistency check turns silent drift into a visible finding.
+2. **Generation lives elsewhere.** This kit loads and emits; it does not compute conformance or UC values. If a value is wrong, fix client-kit and regenerate.
+3. **One lineage backend.** Emit to OpenMetadata only — no Marquez, no second graph.
+4. **Atomic pairs.** Resource + AuditEvent in one transaction bundle, always.
+5. **Lean AuditEvent.** EXT 6 + 7 only. The moment a source-type extension appears on an AuditEvent, the stale seven-extension pattern has crept back — stop and move it to UC properties.

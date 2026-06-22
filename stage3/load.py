@@ -80,11 +80,11 @@ def _build_audit_event(resource: dict, inference: dict,
                     "code": "AUT"
                 }]
             },
-            "who": {"display": f"dqar-aidbox/{pipeline_id}"},
+            "who": {"display": f"dqar-aidbox-databricks-kit/{pipeline_id}"},
             "requestor": True
         }],
         "source": {
-            "observer": {"display": "dqar-aidbox stage3/load.py"}
+            "observer": {"display": "dqar-aidbox-databricks-kit stage3/load.py"}
         },
         "entity": [{
             "what": {
