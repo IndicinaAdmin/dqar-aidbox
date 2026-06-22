@@ -137,12 +137,12 @@ Confirm the warehouse ID used for statement execution is running and the token h
 
 ## Repo Rename Issues (post Step 0)
 
-### `import dqar_aidbox` fails after rename
+### `import dqar_aidbox_databricks_kit` fails after rename
 
-**Cause:** the package import was changed when only the repo/folder should have been renamed (default scope keeps the package name `dqar_aidbox`).
+**Cause:** the package directory or importable name was not updated when the repo was renamed.
 
 **Fix:**
-- Under the default scope, the importable package stays `dqar_aidbox`; only the repo folder becomes `dqar-aidbox-databricks-kit`. Revert any import-path rewrites unless an explicit package rename was requested.
+- The importable package is `dqar_aidbox_databricks_kit`. Ensure the package directory is named accordingly and that `pyproject.toml` reflects the new distribution name `dqar-aidbox-databricks-kit`.
 
 ### Stray `dqar-aidbox` references remain
 
@@ -158,4 +158,4 @@ Update or justify each remaining hit; references in sibling repos are handled by
 
 - **GitHub Issues:** https://github.com/Indicina/dqar-aidbox-databricks-kit/issues
 - **Aidbox / Health Samurai:** https://connect.health-samurai.io/ (Zulip)
-- Enable verbose logging: `dqar-aidbox --verbose <command>`
+- Enable verbose logging: `dqar-aidbox-databricks-kit --verbose <command>`

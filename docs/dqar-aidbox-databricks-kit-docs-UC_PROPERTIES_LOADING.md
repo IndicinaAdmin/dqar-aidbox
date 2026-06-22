@@ -57,7 +57,7 @@ Note `dqar_lineage_ol_run_id` and `dqar_ingest_pipeline_id` echo AuditEvent EXT 
 ## Method 1 — Databricks SDK (programmatic)
 
 ```python
-from dqar_aidbox.loaders import UCPropertiesLoader
+from dqar_aidbox_databricks_kit.loaders import UCPropertiesLoader
 
 loader = UCPropertiesLoader(
     workspace_url="https://your-workspace.cloud.databricks.com",

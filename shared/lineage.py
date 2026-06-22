@@ -53,7 +53,7 @@ def emit_run_event(event_type: str, run_id: str, job_name: str,
         },
         "inputs": inputs,
         "outputs": outputs,
-        "producer": "https://github.com/indicina/dqar-aidbox",
+        "producer": "https://github.com/indicina/dqar-aidbox-databricks-kit",
         "schemaURL": "https://openlineage.io/spec/1-0-5/OpenLineage.json"
     }
 

@@ -124,7 +124,7 @@ Level 3 maturity (the MP2029 floor) requires: versioned mapping code, OpenLineag
 RunEvents are POSTed to OpenMetadata's OpenLineage-compatible ingestion endpoint. There is no intermediate Marquez instance on the Indicina side.
 
 ```python
-from dqar_aidbox.lineage import OpenLineageEmitter
+from dqar_aidbox_databricks_kit.lineage import OpenLineageEmitter
 
 emitter = OpenLineageEmitter(
     endpoint="https://openmetadata.example.com/api/v1/lineage/openlineage",

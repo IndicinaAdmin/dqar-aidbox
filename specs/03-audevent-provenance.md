@@ -29,13 +29,13 @@ No other extensions are written on the AuditEvent. Do **not** add `source-type`,
 
 ## Deliverables
 
-1. **AuditEventBuilder** (`dqar_aidbox/provenance/audevent_builder.py`)
+1. **AuditEventBuilder** (`dqar_aidbox_databricks_kit/provenance/audevent_builder.py`)
    - Build a two-extension AuditEvent for a given resource + `IngestContext`
    - Validate that only EXT 6 + 7 are present (reject any source-attribution extension)
-2. **IngestContext** (`dqar_aidbox/provenance/ingest_context.py`)
+2. **IngestContext** (`dqar_aidbox_databricks_kit/provenance/ingest_context.py`)
    - Carry `ingest_pipeline_id` (EXT 6) and `ol_run_id` (EXT 7) for the batch
    - `ol_run_id` is set from the OpenLineage RunEvent emitted in Phase 2
-3. **TransactionBundleAssembler** (`dqar_aidbox/provenance/bundle_assembler.py`)
+3. **TransactionBundleAssembler** (`dqar_aidbox_databricks_kit/provenance/bundle_assembler.py`)
    - Pair each resource with its AuditEvent into one `type: "transaction"` bundle
    - POST to Aidbox; rely on in-bundle atomicity (resource + AuditEvent together)
 4. **Tests** (`tests/test_audevent_provenance.py`)

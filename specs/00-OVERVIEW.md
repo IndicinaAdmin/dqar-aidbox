@@ -9,7 +9,7 @@
 > `dqar-aidbox-databricks-kit`. The rename is performed by the Step 0 block in the
 > Claude Code instruction file (`claude-code-03`), which preserves git history and
 > updates all references in one commit. The importable package remains
-> `dqar_aidbox` unless an explicit package rename is requested.
+> `dqar_aidbox_databricks_kit` (package rename applied).
 
 ## What This Component Does
 

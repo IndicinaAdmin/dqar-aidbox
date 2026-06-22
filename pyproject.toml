@@ -3,10 +3,10 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.backends.legacy:build"
 
 [project]
-name = "dqar-aidbox"
+name = "dqar-aidbox-databricks-kit"
 version = "0.1.0"
 requires-python = ">=3.11"
-description = "DQAR Aidbox-side sandbox — ingest, semantic assessment, findings report"
+description = "DQAR Aidbox-side Databricks kit — ingest, semantic assessment, findings report"
 dependencies = [
     "dqar-contracts>=1.0.0,<2.0.0",
     "requests",

@@ -33,8 +33,8 @@ pip install "dqar-aidbox-databricks-kit[openlineage]"  # OpenLineage client
 Verify:
 
 ```bash
-dqar-aidbox --version
-dqar-aidbox --help
+dqar-aidbox-databricks-kit --version
+dqar-aidbox-databricks-kit --help
 ```
 
 ---
@@ -67,7 +67,7 @@ export DATABRICKS_HOST="https://your-workspace.cloud.databricks.com"
 ### Step 2 — Start a lineage run
 
 ```python
-from dqar_aidbox.lineage import OpenLineageEmitter
+from dqar_aidbox_databricks_kit.lineage import OpenLineageEmitter
 
 emitter = OpenLineageEmitter(endpoint=OPENMETADATA_URL + "/api/v1/lineage/openlineage",
                              api_token=token,
@@ -83,7 +83,7 @@ run_id = emitter.start_run(
 ### Step 3 — Write resources with provenance
 
 ```python
-from dqar_aidbox.provenance import IngestContext, TransactionBundleAssembler
+from dqar_aidbox_databricks_kit.provenance import IngestContext, TransactionBundleAssembler
 
 ctx = IngestContext(
     ingest_pipeline_id="interbox-job-20251014-ehr-001",
@@ -129,7 +129,7 @@ emitter.complete_run(
 ### Step 5 — Load UC properties from client-kit
 
 ```python
-from dqar_aidbox.loaders import UCPropertiesLoader
+from dqar_aidbox_databricks_kit.loaders import UCPropertiesLoader
 
 loader = UCPropertiesLoader(workspace_url=DATABRICKS_HOST, token=db_token, catalog="aidbox_catalog")
 result = loader.load_from_json("uc-properties.json")
