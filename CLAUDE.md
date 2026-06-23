@@ -1,4 +1,4 @@
-# CLAUDE.md — dqar-aidbox-databricks-kit
+# CLAUDE.md — cdar-aidbox-databricks-kit
 *Digital Quality Audit Readiness — Aidbox-Side Sandbox*
 *Last updated: June 2026 | Confidential — Internal*
 
@@ -6,8 +6,8 @@
 
 ## What This Project Is
 
-The Aidbox-side component of the DQAR platform. Receives the egress package from
-`dqar-client-kit` (anonymized extract + conformance reports), loads into Aidbox
+The Aidbox-side component of the CDAR platform. Receives the egress package from
+`cdar-client-kit` (anonymized extract + conformance reports), loads into Aidbox
 with full AuditEvent provenance metadata, runs SQL on FHIR semantic assessment,
 and generates three-tier findings reports.
 
@@ -26,21 +26,21 @@ plan BAA (Path C). No client-side conformance testing code.
 
 | Repo | Role |
 |---|---|
-| `dqar-contracts` | Shared schemas, ViewDefinitions, SQL, EXT definitions. Source of truth for the client–sandbox interface. |
-| `dqar-client-kit` | Client-side conformance testing kit. Produces the egress package this repo consumes. |
+| `cdar-contracts` | Shared schemas, ViewDefinitions, SQL, EXT definitions. Source of truth for the client–sandbox interface. |
+| `cdar-client-kit` | Client-side conformance testing kit. Produces the egress package this repo consumes. |
 
-**Dependency:** `dqar-contracts>=1.0.0,<2.0.0` is installed into this repo's venv.
-During development: `pip install -e ../dqar-contracts`.
+**Dependency:** `cdar-contracts>=1.0.0,<2.0.0` is installed into this repo's venv.
+During development: `pip install -e ../cdar-contracts`.
 In CI/prod: install from private package registry.
 
-**Never import from `dqar-client-kit` directly.** Consume the egress package only.
+**Never import from `cdar-client-kit` directly.** Consume the egress package only.
 
 ---
 
 ## Architecture Position
 
 ```
-CLIENT ENVIRONMENT (dqar-client-kit)         THIS REPO (dqar-aidbox-databricks-kit)
+CLIENT ENVIRONMENT (cdar-client-kit)         THIS REPO (cdar-aidbox-databricks-kit)
 ────────────────────────────────           ────────────────────────────────
 Stage 1  Conformance testing          →    S3 presigned PUT URL (web/presign.py)
 Stage 2  PHI redaction (Path B)            ↓
@@ -76,13 +76,13 @@ OpenLineage `RunEvent`s go directly to OpenMetadata. See `shared/lineage.py`.
 ## Project Structure
 
 ```
-dqar-aidbox-databricks-kit/
+cdar-aidbox-databricks-kit/
 ├── stage3/
 │   ├── provision.py        # Per-engagement Aidbox org + OAuth client provisioning
 │   ├── load.py             # S3 download → inference → atomic bundle POST → lineage emit
 │   └── inference.py        # Source-type inference algorithm (Priority 0-6)
 ├── stage4/
-│   └── semantic_assessment.py  # SQL measures loaded from dqar-contracts; AuditEvent joins
+│   └── semantic_assessment.py  # SQL measures loaded from cdar-contracts; AuditEvent joins
 ├── stage5/
 │   └── findings.py         # Three-tier findings report generation
 ├── pipeline/
@@ -93,12 +93,12 @@ dqar-aidbox-databricks-kit/
 │   ├── presign.py
 │   └── templates/upload.html
 ├── shared/
-│   ├── engagement.py       # Re-export shim → dqar_contracts.shared.engagement
+│   ├── engagement.py       # Re-export shim → cdar_contracts.shared.engagement
 │   └── lineage.py          # OpenLineage RunEvent → OpenMetadata (not Marquez)
 ├── init_bundle/
-│   ├── generate.py         # CI: generates init-bundle.json from dqar-contracts
+│   ├── generate.py         # CI: generates init-bundle.json from cdar-contracts
 │   └── init-bundle.json    # Generated — do not hand-edit
-├── viewdefs/               # Symlinked or CI-copied from dqar-contracts at deploy
+├── viewdefs/               # Symlinked or CI-copied from cdar-contracts at deploy
 ├── specs/                  # Reference copies for Claude Code context (not source of truth)
 ├── docs/
 │   └── aidbox-kb.md
@@ -110,7 +110,7 @@ dqar-aidbox-databricks-kit/
 
 ## Init Bundle
 
-The Aidbox Init Bundle is generated from `dqar-contracts` at CI time:
+The Aidbox Init Bundle is generated from `cdar-contracts` at CI time:
 
 ```bash
 python init_bundle/generate.py
@@ -123,7 +123,7 @@ All ViewDefinitions in the bundle have `getResourceKey()` enforced by the genera
 
 ## Measure SQL
 
-Stage 4 loads parallel SQL reconstruction queries from `dqar-contracts`:
+Stage 4 loads parallel SQL reconstruction queries from `cdar-contracts`:
 
 ```python
 from stage4.semantic_assessment import _load_measure_sql
@@ -160,7 +160,7 @@ AccessPolicies. One Organization resource per engagement, created by `stage3/pro
 2. **EXT 1–5 from inference, EXT 6–7 from orchestrator.** Never reverse this.
 3. **Unknown source-type is a finding, not a suppressed error.** Log it. Surface it in findings.
 4. **Init Bundle is generated from contracts.** Never hand-edit init-bundle.json.
-5. **SQL measures come from dqar-contracts.** Never hardcode measure SQL in this repo.
+5. **SQL measures come from cdar-contracts.** Never hardcode measure SQL in this repo.
 6. **OpenLineage → OpenMetadata directly.** Marquez is dropped. ol-run-id is a batch tag only.
 7. **Client testers get FHIR API credentials only.** Never issue /$sql access to clients.
 

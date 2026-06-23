@@ -170,10 +170,10 @@ _FRAMEWORK_TO_SOURCE_TYPE = {
 
 def _normalise_feed_manifest(manifest: dict | None) -> dict | None:
     """
-    Normalise a feed_manifest dict produced by dqar-client-kit.
+    Normalise a feed_manifest dict produced by cdar-client-kit.
 
     Adds missing feed_id and maps server-framework source_system_type values
-    (e.g. "hapi") to the DQAR source-type vocabulary (e.g. "clinical_ehr").
+    (e.g. "hapi") to the CDAR source-type vocabulary (e.g. "clinical_ehr").
     The feed_id is derived from fhir_server_url when available, else from the
     source_system_type string — giving a stable, deduplicated identifier even
     when the client-kit didn't populate fhir_server_url yet.

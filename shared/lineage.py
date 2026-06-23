@@ -1,5 +1,5 @@
 """
-OpenLineage event emission for DQAR ingest pipeline.
+OpenLineage event emission for CDAR ingest pipeline.
 
 Events go directly to OpenMetadata (not via Marquez).
 OpenMetadata natively consumes OpenLineage RunEvents.
@@ -28,14 +28,14 @@ def emit_run_event(event_type: str, run_id: str, job_name: str,
     job_name: human-readable job identifier
     inputs: list of OpenLineage Dataset dicts
     outputs: list of OpenLineage Dataset dicts
-    facets: dict of OpenLineage facets (include DQAR run facet from contracts)
+    facets: dict of OpenLineage facets (include CDAR run facet from contracts)
 
     Returns True if emission succeeded, False otherwise (non-fatal — lineage
     emission failure should not block ingest).
     """
-    # Load the DQAR custom facet schema from contracts
+    # Load the CDAR custom facet schema from contracts
     facet_schema = json.loads(
-        (pkg.files("dqar_contracts") / "ol_facets" / "dqar_run_facet.json").read_text()
+        (pkg.files("cdar_contracts") / "ol_facets" / "cdar_run_facet.json").read_text()
     )
 
     event = {
@@ -48,12 +48,12 @@ def emit_run_event(event_type: str, run_id: str, job_name: str,
             }
         },
         "job": {
-            "namespace": "sonian.dqar",
+            "namespace": "sonian.cdar",
             "name": job_name,
         },
         "inputs": inputs,
         "outputs": outputs,
-        "producer": "https://github.com/indicina/dqar-aidbox-databricks-kit",
+        "producer": "https://github.com/indicina/cdar-aidbox-databricks-kit",
         "schemaURL": "https://openlineage.io/spec/1-0-5/OpenLineage.json"
     }
 

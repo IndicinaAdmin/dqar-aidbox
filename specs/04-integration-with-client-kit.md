@@ -1,4 +1,4 @@
-# Phase 4: Integration with dqar-client-kit (Weeks 7–8)
+# Phase 4: Integration with cdar-client-kit (Weeks 7–8)
 
 > **The two kits never call each other at runtime.** They integrate through
 > **artifacts**: client-kit *generates* `uc-properties.json` + findings;
@@ -11,7 +11,7 @@
 ## The Boundary
 
 ```
-dqar-client-kit                         dqar-aidbox-databricks-kit
+cdar-client-kit                         cdar-aidbox-databricks-kit
 ───────────────                         ──────────────────────────
 reads NDJSON extract                    runs at ingest time (Aidbox/Interbox)
 matches to manifest                     writes AuditEvent EXT 6 + 7  (Phase 3)
@@ -26,16 +26,16 @@ UC properties document and the shared identity values.
 
 ---
 
-## Shared Contract Types (from `dqar-contracts`)
+## Shared Contract Types (from `cdar-contracts`)
 
-Both kits depend on `dqar-contracts>=1.0.0,<2.0.0` and re-export from
-`dqar_contracts.shared` via the `shared/engagement.py` shim. Neither kit redefines
+Both kits depend on `cdar-contracts>=1.0.0,<2.0.0` and re-export from
+`cdar_contracts.shared` via the `shared/engagement.py` shim. Neither kit redefines
 these — that's the whole point of the contracts package.
 
 - `Engagement`, `OrganizationRef`, `MeasurementPeriod`
 - `MeasureId`, `MeasureSpec`, `ViewDefinitionRef`
 
-If a type needs to change, it changes in `dqar-contracts` with a version bump — not
+If a type needs to change, it changes in `cdar-contracts` with a version bump — not
 locally in either kit.
 
 ---
@@ -48,12 +48,12 @@ kits' outputs must agree; disagreement is a **finding**, not a warning.
 | # | Linkage | client-kit side | aidbox-databricks side |
 |---|---|---|---|
 | 1 | **Run identity** | `dqar_lineage_ol_run_id` (UC property) | AuditEvent EXT 7 `ol-run-id` == RunEvent `runId` |
-| 2 | **Feed attribution** | `dqar_source_feed_id` (UC property) | `DQARIngestFacet.sourceFeedId` |
+| 2 | **Feed attribution** | `dqar_source_feed_id` (UC property) | `CDARIngestFacet.sourceFeedId` |
 | 3 | **Per-resource ↔ per-table** | per-table UC summary | per-resource AuditEvent run identity |
 
 ```
 Linkage 1:  AuditEvent.EXT7  ==  RunEvent.runId  ==  UC.dqar_lineage_ol_run_id
-Linkage 2:  UC.dqar_source_feed_id  ==  DQARIngestFacet.sourceFeedId
+Linkage 2:  UC.dqar_source_feed_id  ==  CDARIngestFacet.sourceFeedId
 Linkage 3:  per-resource AuditEvent run  rolls up to  per-table UC attribution
 ```
 
@@ -105,7 +105,7 @@ class ConsistencyValidator:
                     1, "tier_1",
                     f"AuditEvent EXT7 {ext7} != RunEvent.runId {run_id}"))
 
-        # Linkage 2: UC.dqar_source_feed_id == DQARIngestFacet.sourceFeedId
+        # Linkage 2: UC.dqar_source_feed_id == CDARIngestFacet.sourceFeedId
         uc_feed = uc_properties["properties"].get("dqar_source_feed_id")
         facet = _dqar_ingest_facet(run_event)
         if facet and uc_feed and facet.get("sourceFeedId") != uc_feed:
@@ -141,7 +141,7 @@ it does not raise — surfacing a finding is the product behavior.
 
 ## Phase 4 Success Criteria
 
-- [ ] Both kits import shared types from `dqar-contracts` (no local redefinition)
+- [ ] Both kits import shared types from `cdar-contracts` (no local redefinition)
 - [ ] `ConsistencyValidator` checks all three identity linkages
 - [ ] Linkage 1 mismatch (run identity) → Tier 1 finding
 - [ ] Linkage 2 mismatch (feed attribution) → Tier 2 finding

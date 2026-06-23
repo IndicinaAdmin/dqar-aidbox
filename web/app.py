@@ -1,5 +1,5 @@
 """
-DQAR Upload Portal — FastAPI application.
+CDAR Upload Portal — FastAPI application.
 
 Run:
     uvicorn web.app:app --reload --port 8000
@@ -19,7 +19,7 @@ from starlette.requests import Request
 
 from web.presign import check_upload_exists, generate_presigned_put
 
-app = FastAPI(title="DQAR Upload Portal", docs_url=None, redoc_url=None)
+app = FastAPI(title="CDAR Upload Portal", docs_url=None, redoc_url=None)
 
 _ROOT = Path(__file__).parent.parent
 _ENGAGEMENTS_DIR = _ROOT / "config" / "engagements"

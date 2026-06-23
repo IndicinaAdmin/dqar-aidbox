@@ -1,6 +1,6 @@
 # OpenLineage Emission Reference
 
-**dqar-aidbox-databricks-kit documentation**  
+**cdar-aidbox-databricks-kit documentation**  
 Version: June 2026  
 Component: Lineage event emission
 
@@ -18,7 +18,7 @@ Interbox ingest batch
    │
    ├─ emits START RunEvent  ─┐
    ├─ emits COMPLETE RunEvent ┘ → OpenMetadata (lineage graph assembled here)
-   │       carries DQARIngestFacet (field mappings)
+   │       carries CDARIngestFacet (field mappings)
    ▼
 OpenMetadata catalog: inputs → outputs graph + field-level lineage
 ```
@@ -32,7 +32,7 @@ Each ingest batch emits at least two RunEvents sharing one `runId`:
 | Event type | When | Carries |
 |---|---|---|
 | `START` | batch begins | run identity, job reference, inputs (source datasets) |
-| `COMPLETE` | batch succeeds | outputs (FHIR datasets), `DQARIngestFacet` with field mappings |
+| `COMPLETE` | batch succeeds | outputs (FHIR datasets), `CDARIngestFacet` with field mappings |
 | `FAIL` | batch errors | error facet; emit instead of COMPLETE on failure |
 
 ```json
@@ -58,11 +58,11 @@ Each ingest batch emits at least two RunEvents sharing one `runId`:
       "namespace": "aidbox",
       "name": "Observation",
       "facets": {
-        "dqarIngest": { "...DQARIngestFacet (see below)..." }
+        "dqarIngest": { "...CDARIngestFacet (see below)..." }
       }
     }
   ],
-  "producer": "https://sonian.io/dqar-aidbox-databricks-kit/1.0.0",
+  "producer": "https://sonian.io/cdar-aidbox-databricks-kit/1.0.0",
   "schemaURL": "https://openlineage.io/spec/2-0-2/OpenLineage.json#/definitions/RunEvent"
 }
 ```
@@ -71,15 +71,15 @@ The `runId` here (`a1b2c3d4-...`) is exactly what lands in AuditEvent EXT 7 for 
 
 ---
 
-## The DQARIngestFacet
+## The CDARIngestFacet
 
-The custom `DQARIngestFacet` is attached to each **output dataset** in the COMPLETE RunEvent. It captures the field-level mapping from the source message structure to FHIR fields — the heart of what makes Study Type 2 (EHR Clinical Data Feed Completeness) mechanically executable rather than a manual field-by-field trace.
+The custom `CDARIngestFacet` is attached to each **output dataset** in the COMPLETE RunEvent. It captures the field-level mapping from the source message structure to FHIR fields — the heart of what makes Study Type 2 (EHR Clinical Data Feed Completeness) mechanically executable rather than a manual field-by-field trace.
 
 ```json
 {
   "dqarIngest": {
-    "_producer": "https://sonian.io/dqar-aidbox-databricks-kit/1.0.0",
-    "_schemaURL": "https://sonian.io/dqar/facets/DQARIngestFacet.json",
+    "_producer": "https://sonian.io/cdar-aidbox-databricks-kit/1.0.0",
+    "_schemaURL": "https://sonian.io/dqar/facets/CDARIngestFacet.json",
     "ingestPipelineId": "interbox-job-20251014-ehr-001",
     "sourceFeedId": "ehr-epic-447-clinical",
     "sourceSystemId": "epic-prod-org-447",
@@ -129,7 +129,7 @@ from dqar_aidbox_databricks_kit.lineage import OpenLineageEmitter
 emitter = OpenLineageEmitter(
     endpoint="https://openmetadata.example.com/api/v1/lineage/openlineage",
     api_token=token,  # supplied by orchestrator, never hardcoded
-    producer="https://sonian.io/dqar-aidbox-databricks-kit/1.0.0",
+    producer="https://sonian.io/cdar-aidbox-databricks-kit/1.0.0",
 )
 
 run_id = emitter.start_run(
@@ -144,7 +144,7 @@ emitter.complete_run(
     outputs=[{
         "namespace": "aidbox",
         "name": "Observation",
-        "dqar_ingest_facet": dqar_ingest_facet,  # the DQARIngestFacet dict
+        "dqar_ingest_facet": dqar_ingest_facet,  # the CDARIngestFacet dict
     }],
 )
 ```
@@ -160,7 +160,7 @@ The contract between this doc and `AUDITEVENT_PROVENANCE.md`:
 1. Orchestrator calls `start_run()` → receives `run_id`.
 2. Orchestrator stores `run_id` in `IngestContext`.
 3. Every AuditEvent written during the batch sets EXT 7 (`ol-run-id`) = `run_id`.
-4. Orchestrator calls `complete_run()` with the `DQARIngestFacet`.
+4. Orchestrator calls `complete_run()` with the `CDARIngestFacet`.
 5. OpenMetadata assembles the input→output graph and field-level lineage from the RunEvent.
 
 To trace a resource's origin: read its AuditEvent EXT 7, look up that `runId` in OpenMetadata, and read the RunEvent's declared inputs/outputs and `fieldMappings`. You never SQL-join resources to lineage on the UUID — the UUID is the lookup key into the graph, and the graph holds the relationships.

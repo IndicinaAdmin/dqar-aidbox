@@ -1,6 +1,6 @@
 # Usage Examples
 
-> Scope: `dqar-aidbox-databricks-kit` — ingest-time operations. The CLI surface is
+> Scope: `cdar-aidbox-databricks-kit` — ingest-time operations. The CLI surface is
 > `aidbox-dqar ingest`, not the `client-kit validate-*` commands (those are the
 > assessment-time kit).
 
@@ -20,7 +20,7 @@ aidbox-dqar ingest \
 Sequence (see `05-phase-5-integration-orchestration.md`):
 1. `start_run()` → `ol_run_id`
 2. atomic resource + AuditEvent bundles (EXT 6 = pipeline, EXT 7 = `ol_run_id`)
-3. `complete_run()` with `DQARIngestFacet`
+3. `complete_run()` with `CDARIngestFacet`
 4. load UC properties (if `--load-uc-props` given)
 5. consistency validation → report
 
@@ -139,7 +139,7 @@ A clean run prints `Consistency: OK`. Tier 1 findings exit non-zero.
 
 - Provenance backend is **OpenMetadata**; there is no Marquez in this kit.
 - Shared identifiers (`Engagement`, `MeasurementPeriod`, etc.) come from
-  `dqar-contracts`; this kit does not define them.
+  `cdar-contracts`; this kit does not define them.
 
 See `docs/AUDITEVENT_PROVENANCE.md` for the authoritative EXT 6+7 reference and
 `docs/OPENLINEAGE_EMISSION.md` for the full RunEvent lifecycle.

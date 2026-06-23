@@ -1,5 +1,5 @@
 """
-Generate the Aidbox Init Bundle from dqar-contracts artifacts.
+Generate the Aidbox Init Bundle from cdar-contracts artifacts.
 
 Run at CI time before deployment. Writes init_bundle/init-bundle.json.
 Never hand-edit init-bundle.json — always regenerate from contracts.
@@ -17,8 +17,8 @@ from pathlib import Path
 
 
 def load_viewdefinitions() -> list:
-    """Load all ViewDefinition JSON files from dqar-contracts."""
-    vd_dir = pkg.files("dqar_contracts") / "viewdefinitions"
+    """Load all ViewDefinition JSON files from cdar-contracts."""
+    vd_dir = pkg.files("cdar_contracts") / "viewdefinitions"
     viewdefs = []
     for entry in sorted(vd_dir.iterdir()):
         if not str(entry).endswith(".json"):
@@ -33,7 +33,7 @@ def load_viewdefinitions() -> list:
         if not has_rk:
             raise ValueError(
                 f"ViewDefinition '{vd.get('name')}' is missing getResourceKey() — "
-                "lineage chain would break. Fix in dqar-contracts before generating Init Bundle."
+                "lineage chain would break. Fix in cdar-contracts before generating Init Bundle."
             )
 
         # getId() strips the resource type and accepts any reference target, producing
@@ -49,7 +49,7 @@ def load_viewdefinitions() -> list:
             raise ValueError(
                 f"ViewDefinition '{vd.get('name')}' uses getId() in: {bad_paths}. "
                 "Replace with getReferenceKey(<ResourceType>) for typed reference extraction. "
-                "Fix in dqar-contracts before generating Init Bundle."
+                "Fix in cdar-contracts before generating Init Bundle."
             )
 
         has_ts = any(p == "getAidboxTs()" for p in all_paths)
@@ -58,13 +58,13 @@ def load_viewdefinitions() -> list:
                   "incremental export via _since will not work for this view.")
 
         viewdefs.append(vd)
-    print(f"  Loaded {len(viewdefs)} ViewDefinitions from dqar-contracts")
+    print(f"  Loaded {len(viewdefs)} ViewDefinitions from cdar-contracts")
     return viewdefs
 
 
 def load_ext_definitions() -> dict:
-    """Load AuditEvent extension definitions from dqar-contracts."""
-    ext_file = pkg.files("dqar_contracts") / "audit_extensions" / "seven_extensions.json"
+    """Load AuditEvent extension definitions from cdar-contracts."""
+    ext_file = pkg.files("cdar_contracts") / "audit_extensions" / "seven_extensions.json"
     return json.loads(ext_file.read_text())
 
 
@@ -73,8 +73,8 @@ def build_bundle(viewdefs: list, ext_defs: dict) -> dict:
     Build the Aidbox Init Bundle.
 
     The bundle contains:
-    - ViewDefinitions (from dqar-contracts, getResourceKey() enforced)
-    - StructureDefinitions for the seven AuditEvent extensions (from dqar-contracts)
+    - ViewDefinitions (from cdar-contracts, getResourceKey() enforced)
+    - StructureDefinitions for the seven AuditEvent extensions (from cdar-contracts)
 
     AccessPolicies and Client resources are environment-specific and are loaded
     from environment variables or separate secret files at deploy time.
@@ -98,7 +98,7 @@ def build_bundle(viewdefs: list, ext_defs: dict) -> dict:
             "resourceType": "StructureDefinition",
             "id": f"sonian-{ext['id'].lower()}",
             "url": ext["url"],
-            "name": f"DQAR{ext['id']}",
+            "name": f"CDAR{ext['id']}",
             "status": "active",
             "kind": "complex-type",
             "abstract": False,
@@ -131,7 +131,7 @@ def build_bundle(viewdefs: list, ext_defs: dict) -> dict:
             "tag": [{
                 "system": "http://Sonian.io/fhir/tags",
                 "code": "init-bundle",
-                "display": f"Generated {datetime.now(timezone.utc).isoformat()} from dqar-contracts"
+                "display": f"Generated {datetime.now(timezone.utc).isoformat()} from cdar-contracts"
             }]
         },
         "entry": entries
@@ -139,12 +139,12 @@ def build_bundle(viewdefs: list, ext_defs: dict) -> dict:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Generate Aidbox Init Bundle from dqar-contracts")
+    parser = argparse.ArgumentParser(description="Generate Aidbox Init Bundle from cdar-contracts")
     parser.add_argument("--output", default="init_bundle/init-bundle.json",
                         help="Output path for the generated bundle")
     args = parser.parse_args()
 
-    print("Generating Init Bundle from dqar-contracts...")
+    print("Generating Init Bundle from cdar-contracts...")
 
     viewdefs = load_viewdefinitions()
     ext_defs = load_ext_definitions()

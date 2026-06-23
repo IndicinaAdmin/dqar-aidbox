@@ -2,7 +2,7 @@
 Stage 5 — Three-tier findings report.
 
 Consumes the Stage 4 assessment result dict and classifies findings into
-three tiers aligned with DQAR Domain 3:
+three tiers aligned with CDAR Domain 3:
 
   Tier 1 — Lineage gap findings
     Unknown source-type resources; missing audit metadata; feeds with no
@@ -198,7 +198,7 @@ def generate_findings_report(
 def render_findings_text(report: dict) -> str:
     lines = [
         "=" * 70,
-        "DQAR FINDINGS REPORT",
+        "CDAR FINDINGS REPORT",
         f"Engagement : {report['engagement_id']}",
         f"Run ID     : {report['ol_run_id']}",
         f"Generated  : {report['generated_at']}",

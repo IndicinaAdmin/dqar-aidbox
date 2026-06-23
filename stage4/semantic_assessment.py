@@ -9,7 +9,7 @@ Queries sof.* materialized views rather than raw JSONB tables. This means:
 ViewDefinitions must be materialized before this stage runs.
 Call init_bundle/materialize.py after loading the init-bundle.
 
-Parallel SQL reconstruction queries are still loaded from dqar-contracts
+Parallel SQL reconstruction queries are still loaded from cdar-contracts
 to stay in sync with the ViewDefinitions. Never hardcode measure SQL here.
 """
 
@@ -64,7 +64,7 @@ ORDER BY aem.recorded DESC
 
 
 def _load_measure_sql(measure_name: str) -> str:
-    sql_file = pkg.files("dqar_contracts") / "sql" / "measures" / f"{measure_name}.sql"
+    sql_file = pkg.files("cdar_contracts") / "sql" / "measures" / f"{measure_name}.sql"
     return sql_file.read_text()
 
 
@@ -109,9 +109,9 @@ def run_unknown_source_report(aidbox_sql_url: str, headers: dict) -> list[dict]:
 
 def run_cbp_numerator(aidbox_sql_url: str, headers: dict) -> dict:
     """
-    CBP numerator reconstruction from dqar-contracts SQL.
+    CBP numerator reconstruction from cdar-contracts SQL.
 
-    The measure SQL in dqar-contracts joins sof.observation_bp with
+    The measure SQL in cdar-contracts joins sof.observation_bp with
     sof.audit_event_metadata to project observation_id + lineage columns.
     """
     sql = _load_measure_sql("cbp_numerator")
@@ -129,7 +129,7 @@ def run_cbp_numerator(aidbox_sql_url: str, headers: dict) -> dict:
 
 def run_cdc_hba1c_numerator(aidbox_sql_url: str, headers: dict) -> dict:
     """
-    CDC HbA1c numerator reconstruction from dqar-contracts SQL.
+    CDC HbA1c numerator reconstruction from cdar-contracts SQL.
 
     The measure SQL joins sof.observation_hba1c with sof.audit_event_metadata.
     Flags observations with plausibility issues as Tier 2 findings.

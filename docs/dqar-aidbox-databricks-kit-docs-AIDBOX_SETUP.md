@@ -1,6 +1,6 @@
 # Aidbox Setup Reference
 
-**dqar-aidbox-databricks-kit documentation**  
+**cdar-aidbox-databricks-kit documentation**  
 Version: June 2026  
 Component: Aidbox configuration for the kit
 

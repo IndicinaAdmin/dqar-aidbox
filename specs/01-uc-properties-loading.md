@@ -1,7 +1,7 @@
 # Phase 1: UC Properties Loading (Weeks 1–2)
 
 > **Boundary reminder:** This kit **loads** UC table properties that
-> `dqar-client-kit` **generates**. It does not compute or re-derive property
+> `cdar-client-kit` **generates**. It does not compute or re-derive property
 > values. The source/feed/type/SSoR attribution that older designs placed in
 > AuditEvent EXT 1–5 lives here, as Unity Catalog table properties. See
 > `docs/UC_PROPERTIES_LOADING.md` for the full reference.
@@ -171,7 +171,7 @@ WHERE table_name = 'observation'
 ```
 
 - `dqar_lineage_ol_run_id` must resolve to a RunEvent in OpenMetadata (Phase 2)
-- `dqar_source_feed_id` must equal that RunEvent's `DQARIngestFacet.sourceFeedId`
+- `dqar_source_feed_id` must equal that RunEvent's `CDARIngestFacet.sourceFeedId`
 
 Drift between the table property and the lineage facet is a **finding**, not just a
 config error.

@@ -1,6 +1,6 @@
-# dqar-aidbox-databricks-kit Quickstart
+# cdar-aidbox-databricks-kit Quickstart
 
-**dqar-aidbox-databricks-kit documentation**  
+**cdar-aidbox-databricks-kit documentation**  
 Version: June 2026
 
 ---
@@ -10,31 +10,31 @@ Version: June 2026
 It is the bridge between Aidbox (FHIR) and Databricks (analytics), with lineage to OpenMetadata. Three jobs:
 
 1. **Write provenance** — pair each ingested resource with a two-extension AuditEvent (EXT 6 + 7) in atomic transaction bundles
-2. **Emit lineage** — send OpenLineage RunEvents (with the `DQARIngestFacet` field mappings) to OpenMetadata
+2. **Emit lineage** — send OpenLineage RunEvents (with the `CDARIngestFacet` field mappings) to OpenMetadata
 3. **Load UC properties** — apply client-kit's generated UC table properties to Databricks Unity Catalog
 
-It consumes what `dqar-client-kit` produces; it does not generate UC properties or run conformance checks itself.
+It consumes what `cdar-client-kit` produces; it does not generate UC properties or run conformance checks itself.
 
 ---
 
 ## Install
 
 ```bash
-pip install dqar-aidbox-databricks-kit>=1.0.0,<2.0.0
+pip install cdar-aidbox-databricks-kit>=1.0.0,<2.0.0
 ```
 
 Optional extras:
 
 ```bash
-pip install "dqar-aidbox-databricks-kit[databricks]"   # Databricks SDK loader
-pip install "dqar-aidbox-databricks-kit[openlineage]"  # OpenLineage client
+pip install "cdar-aidbox-databricks-kit[databricks]"   # Databricks SDK loader
+pip install "cdar-aidbox-databricks-kit[openlineage]"  # OpenLineage client
 ```
 
 Verify:
 
 ```bash
-dqar-aidbox-databricks-kit --version
-dqar-aidbox-databricks-kit --help
+cdar-aidbox-databricks-kit --version
+cdar-aidbox-databricks-kit --help
 ```
 
 ---
@@ -71,7 +71,7 @@ from dqar_aidbox_databricks_kit.lineage import OpenLineageEmitter
 
 emitter = OpenLineageEmitter(endpoint=OPENMETADATA_URL + "/api/v1/lineage/openlineage",
                              api_token=token,
-                             producer="https://sonian.io/dqar-aidbox-databricks-kit/1.0.0")
+                             producer="https://sonian.io/cdar-aidbox-databricks-kit/1.0.0")
 
 run_id = emitter.start_run(
     job_namespace="interbox",
@@ -148,7 +148,7 @@ WHERE table_name = 'observation';
 ```
 - AuditEvent EXT 7 on each resource == run_id from Step 2
 - That run_id resolves to a RunEvent in OpenMetadata (Step 4)
-- The RunEvent's DQARIngestFacet.sourceFeedId == the table's dqar_source_feed_id
+- The RunEvent's CDARIngestFacet.sourceFeedId == the table's dqar_source_feed_id
 ```
 
 If all three line up, provenance is intact end to end.

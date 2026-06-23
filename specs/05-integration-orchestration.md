@@ -1,7 +1,7 @@
 # Phase 5: Integration & Orchestration (Weeks 9–10)
 
 > Ties Phases 1–4 into a single ingest run: open a lineage run, write atomic
-> resource+AuditEvent bundles, emit the RunEvent with the `DQARIngestFacet`, load
+> resource+AuditEvent bundles, emit the RunEvent with the `CDARIngestFacet`, load
 > UC properties, and validate the three identity linkages. This is the order of
 > operations that keeps EXT 6/7, the RunEvent, and the UC properties in agreement.
 
@@ -30,7 +30,7 @@
 3. for each resource in batch:
      POST atomic transaction bundle     [Phase 3]
        { resource , AuditEvent(EXT6=pipeline_id, EXT7=ol_run_id) }
-4. complete_run(outputs + DQARIngestFacet)  [Phase 2]
+4. complete_run(outputs + CDARIngestFacet)  [Phase 2]
 5. (if uc-properties.json provided)
      UCPropertiesLoader.load_from_json()    [Phase 1]
 6. ConsistencyValidator.validate(           [Phase 4]
@@ -55,7 +55,7 @@ from dataclasses import dataclass
 class IngestContext:
     ingest_pipeline_id: str   # → AuditEvent EXT 6
     ol_run_id: str            # → AuditEvent EXT 7 == RunEvent.runId
-    source_feed_id: str       # → DQARIngestFacet.sourceFeedId, UC dqar_source_feed_id
+    source_feed_id: str       # → CDARIngestFacet.sourceFeedId, UC dqar_source_feed_id
     source_system_id: str
     measurement_period: str
 ```

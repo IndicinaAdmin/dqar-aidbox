@@ -1,7 +1,7 @@
 """
 Stage 3 — Load egress package into Aidbox.
 
-Accepts a tar.gz egress package from dqar-client-kit:
+Accepts a tar.gz egress package from cdar-client-kit:
   - Decompresses NDJSON files per resource type
   - Runs source-type inference on each resource (EXT 1-5)
   - Builds batched transaction bundles (resource + AuditEvent pairs)
@@ -35,9 +35,9 @@ AIDBOX_URL = os.environ.get("AIDBOX_URL", "http://localhost:8080")
 # x-fhir-skip-reference-validation is not honoured for multi-resource transaction
 # bundles on some Aidbox Edge sandboxes, so default 1 avoids cross-bundle reference
 # failures. Production Aidbox (private network, skip-ref-validation working) can
-# safely use DQAR_BUNDLE_BATCH_SIZE=200.
-BUNDLE_BATCH_SIZE = int(os.environ.get("DQAR_BUNDLE_BATCH_SIZE", "1"))
-_BUNDLE_MAX_RETRIES = int(os.environ.get("DQAR_BUNDLE_MAX_RETRIES", "3"))
+# safely use CDAR_BUNDLE_BATCH_SIZE=200.
+BUNDLE_BATCH_SIZE = int(os.environ.get("CDAR_BUNDLE_BATCH_SIZE", "1"))
+_BUNDLE_MAX_RETRIES = int(os.environ.get("CDAR_BUNDLE_MAX_RETRIES", "3"))
 
 EXT_SOURCE_TYPE       = "http://Sonian.io/fhir/ext/source-type"
 EXT_SOURCE_SYSTEM_ID  = "http://Sonian.io/fhir/ext/source-system-id"
@@ -80,11 +80,11 @@ def _build_audit_event(resource: dict, inference: dict,
                     "code": "AUT"
                 }]
             },
-            "who": {"display": f"dqar-aidbox-databricks-kit/{pipeline_id}"},
+            "who": {"display": f"cdar-aidbox-databricks-kit/{pipeline_id}"},
             "requestor": True
         }],
         "source": {
-            "observer": {"display": "dqar-aidbox-databricks-kit stage3/load.py"}
+            "observer": {"display": "cdar-aidbox-databricks-kit stage3/load.py"}
         },
         "entity": [{
             "what": {
@@ -385,7 +385,7 @@ def _process_resource(resource: dict, batch: list,
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(description="Load DQAR egress package into Aidbox")
+    parser = argparse.ArgumentParser(description="Load CDAR egress package into Aidbox")
     parser.add_argument("package", help="Path to egress tar.gz")
     parser.add_argument("--pipeline-id", default=f"pipeline-{uuid.uuid4()}")
     parser.add_argument("--ol-run-id", default=str(uuid.uuid4()))

@@ -1,5 +1,5 @@
 """
-S3 presigned URL generation and upload status checks for the DQAR upload portal.
+S3 presigned URL generation and upload status checks for the CDAR upload portal.
 
 AWS credentials are resolved via the standard boto3 chain:
   env vars (AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY)

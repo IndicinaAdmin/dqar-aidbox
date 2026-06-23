@@ -1,6 +1,6 @@
 # OpenMetadata Integration Reference
 
-**dqar-aidbox-databricks-kit documentation**  
+**cdar-aidbox-databricks-kit documentation**  
 Version: June 2026  
 Component: Catalog and lineage-graph layer
 
@@ -27,14 +27,14 @@ OpenMetadata builds lineage from the **declared inputs and outputs** of each Run
 ```
 RunEvent (runId R1)
   inputs:  [ hl7v2:epic-prod-org-447.oru-feed ]
-  outputs: [ aidbox:Observation ]  + DQARIngestFacet(fieldMappings)
+  outputs: [ aidbox:Observation ]  + CDARIngestFacet(fieldMappings)
        │
        ▼
 OpenMetadata edge:  hl7v2:epic-prod-org-447.oru-feed ──▶ aidbox:Observation
        with field-level mappings (OBX-5 → Observation.valueQuantity.value, ...)
 ```
 
-Each RunEvent contributes one or more edges. Over many runs, OpenMetadata accumulates the full source→FHIR graph, including field-level edges from the `DQARIngestFacet`.
+Each RunEvent contributes one or more edges. Over many runs, OpenMetadata accumulates the full source→FHIR graph, including field-level edges from the `CDARIngestFacet`.
 
 ### The `ol-run-id` is a lookup key, not a join key
 
@@ -54,14 +54,14 @@ You never SQL-join resources to a lineage table on the UUID. There is no such ta
 |---|---|---|
 | Dataset entities | RunEvent inputs/outputs | Nodes in the lineage graph (source feeds, FHIR datasets) |
 | Lineage edges | RunEvent input→output declarations | The graph itself |
-| Field-level lineage | `DQARIngestFacet.fieldMappings` | Source-field → FHIR-field edges with translation-table versions |
+| Field-level lineage | `CDARIngestFacet.fieldMappings` | Source-field → FHIR-field edges with translation-table versions |
 | Run history | RunEvent START/COMPLETE/FAIL | Audit trail of ingest runs by `runId` |
 
 ---
 
 ## Querying Lineage
 
-OpenMetadata exposes the graph through its lineage API. Typical DQAR queries:
+OpenMetadata exposes the graph through its lineage API. Typical CDAR queries:
 
 **Trace a resource to its source:**
 ```
@@ -82,7 +82,7 @@ GET /api/v1/lineage/{datasetFqn}?upstreamDepth=0&downstreamDepth=3
 For a sample of resources:
   - read AuditEvent EXT 7 (ol-run-id)
   - confirm each runId resolves to a RunEvent in OpenMetadata
-  - confirm the RunEvent carries a DQARIngestFacet with fieldMappings
+  - confirm the RunEvent carries a CDARIngestFacet with fieldMappings
 Coverage % of resolvable runIds with field mappings = the maturity signal.
 ```
 
@@ -98,7 +98,7 @@ OpenMetadata and Databricks UC hold **complementary** metadata; do not conflate 
 | "What feed/system/type/SSoR does this *table* represent, and how conformant is it?" | **Databricks UC table properties** (see `UC_PROPERTIES_LOADING.md`) |
 | "Which ingest run produced this *exact resource*?" | **AuditEvent EXT 6 + 7** (see `AUDITEVENT_PROVENANCE.md`) |
 
-The `DQARIngestFacet` deliberately mirrors `sourceFeedId`/`sourceSystemId` into the lineage graph so the graph is self-describing — but the authoritative per-table attribution lives in UC properties, and the two must stay consistent (drift is a finding).
+The `CDARIngestFacet` deliberately mirrors `sourceFeedId`/`sourceSystemId` into the lineage graph so the graph is self-describing — but the authoritative per-table attribution lives in UC properties, and the two must stay consistent (drift is a finding).
 
 ---
 
@@ -115,6 +115,6 @@ The `DQARIngestFacet` deliberately mirrors `sourceFeedId`/`sourceSystemId` into 
 
 1. **Treat OpenMetadata as the single lineage backend.** If a design reintroduces Marquez as a second store, the graph can diverge — emit to one backend.
 2. **Declare complete inputs and outputs on every RunEvent.** The graph is only as good as the declarations; a COMPLETE event missing its output dataset leaves an orphaned run.
-3. **Resolve, don't join.** When building DQAR risk-stratification queries, resolve `ol-run-id` → RunEvent → graph. Do not attempt a relational join on the UUID.
-4. **Keep facet and UC properties in lockstep.** A nightly check that `DQARIngestFacet.sourceFeedId` matches the dataset's `dqar_source_feed_id` UC property catches drift early.
+3. **Resolve, don't join.** When building CDAR risk-stratification queries, resolve `ol-run-id` → RunEvent → graph. Do not attempt a relational join on the UUID.
+4. **Keep facet and UC properties in lockstep.** A nightly check that `CDARIngestFacet.sourceFeedId` matches the dataset's `dqar_source_feed_id` UC property catches drift early.
 5. **Verify run closure.** Periodically query for STARTed runs with no COMPLETE/FAIL — these indicate aborted ingests and undermine provenance-maturity coverage.

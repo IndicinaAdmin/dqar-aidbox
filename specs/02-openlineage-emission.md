@@ -7,7 +7,7 @@
 > relational join key — OpenMetadata assembles the graph from declared inputs and
 > outputs. See `docs/OPENLINEAGE_EMISSION.md`.
 
-Emit OpenLineage RunEvents from each ingest batch, carrying the `DQARIngestFacet`
+Emit OpenLineage RunEvents from each ingest batch, carrying the `CDARIngestFacet`
 with field-level mappings, to OpenMetadata.
 
 ---
@@ -16,9 +16,9 @@ with field-level mappings, to OpenMetadata.
 
 1. **OpenLineageEmitter** (`aidbox_databricks/lineage/openlineage_emitter.py`)
    - `start_run()` → returns `run_id` (UUID)
-   - `complete_run()` with outputs + `DQARIngestFacet`
+   - `complete_run()` with outputs + `CDARIngestFacet`
    - `fail_run()` on error (same `run_id`)
-2. **DQARIngestFacet builder** (`aidbox_databricks/lineage/dqar_ingest_facet.py`)
+2. **CDARIngestFacet builder** (`aidbox_databricks/lineage/dqar_ingest_facet.py`)
    - `ingestPipelineId`, `sourceFeedId`, `sourceSystemId`
    - `fieldMappings[]` with `sourcePath`, `sourceSegment`, `targetPath`, `translationTable`, `translationTableVersion`
 3. **OpenMetadata client** (`aidbox_databricks/clients/openmetadata_client.py`)
@@ -26,7 +26,7 @@ with field-level mappings, to OpenMetadata.
    - Retry/backoff; token supplied by caller, never hardcoded
 4. **Tests** (`tests/test_openlineage_emission.py`)
    - START/COMPLETE share one `run_id`
-   - COMPLETE carries `DQARIngestFacet` with versioned `fieldMappings`
+   - COMPLETE carries `CDARIngestFacet` with versioned `fieldMappings`
    - FAIL emitted on error path; no dangling START
 
 ---
@@ -36,7 +36,7 @@ with field-level mappings, to OpenMetadata.
 | Event | When | Carries |
 |---|---|---|
 | `START` | batch begins | run identity, job ref, input datasets (source feeds) |
-| `COMPLETE` | batch succeeds | output datasets (FHIR) + `DQARIngestFacet` |
+| `COMPLETE` | batch succeeds | output datasets (FHIR) + `CDARIngestFacet` |
 | `FAIL` | batch errors | error facet (instead of COMPLETE) |
 
 ```json
@@ -49,9 +49,9 @@ with field-level mappings, to OpenMetadata.
   "outputs": [{
     "namespace": "aidbox",
     "name": "Observation",
-    "facets": { "dqarIngest": { "...DQARIngestFacet..." } }
+    "facets": { "dqarIngest": { "...CDARIngestFacet..." } }
   }],
-  "producer": "https://sonian.io/dqar-aidbox-databricks-kit/1.0.0",
+  "producer": "https://sonian.io/cdar-aidbox-databricks-kit/1.0.0",
   "schemaURL": "https://openlineage.io/spec/2-0-2/OpenLineage.json#/definitions/RunEvent"
 }
 ```
@@ -60,7 +60,7 @@ The `runId` here is exactly what lands in AuditEvent EXT 7 for the batch.
 
 ---
 
-## DQARIngestFacet
+## CDARIngestFacet
 
 Attached to each output dataset in the COMPLETE event. The `fieldMappings` array is
 the "mappings as code" pattern made observable — it makes Study Type 2 (EHR
@@ -69,8 +69,8 @@ Clinical Data Feed Completeness) a graph query instead of a manual trace.
 ```json
 {
   "dqarIngest": {
-    "_producer": "https://sonian.io/dqar-aidbox-databricks-kit/1.0.0",
-    "_schemaURL": "https://sonian.io/dqar/facets/DQARIngestFacet.json",
+    "_producer": "https://sonian.io/cdar-aidbox-databricks-kit/1.0.0",
+    "_schemaURL": "https://sonian.io/dqar/facets/CDARIngestFacet.json",
     "ingestPipelineId": "interbox-job-20251014-ehr-001",
     "sourceFeedId": "ehr-epic-447-clinical",
     "sourceSystemId": "epic-prod-org-447",
@@ -127,7 +127,7 @@ class OpenLineageEmitter:
 
     def complete_run(self, run_id: str, job_namespace: str, job_name: str,
                      outputs: list[dict]) -> None:
-        # each output may carry a DQARIngestFacet under outputs[i]["facets"]["dqarIngest"]
+        # each output may carry a CDARIngestFacet under outputs[i]["facets"]["dqarIngest"]
         self._emit("COMPLETE", run_id, job_namespace, job_name, inputs=[], outputs=outputs)
 
     def fail_run(self, run_id: str, job_namespace: str, job_name: str, error: str) -> None:
@@ -146,7 +146,7 @@ The contract between this phase and Phase 3:
 1. Orchestrator calls `start_run()` → receives `run_id`.
 2. Orchestrator stores `run_id` in `IngestContext` (Phase 3).
 3. Every AuditEvent in the batch sets EXT 7 (`ol-run-id`) = `run_id`.
-4. Orchestrator calls `complete_run()` with the `DQARIngestFacet`.
+4. Orchestrator calls `complete_run()` with the `CDARIngestFacet`.
 5. OpenMetadata assembles the input→output + field-level graph.
 
 To trace a resource: read its AuditEvent EXT 7 → look up that `runId` in
@@ -159,10 +159,10 @@ UUID.
 
 - [ ] START / COMPLETE share one `run_id` per ingest batch
 - [ ] COMPLETE declares both inputs and outputs (no orphaned runs)
-- [ ] `DQARIngestFacet` present with versioned `fieldMappings`
+- [ ] `CDARIngestFacet` present with versioned `fieldMappings`
 - [ ] FAIL emitted on error; no dangling START
 - [ ] RunEvents POST to **OpenMetadata** (not Marquez)
 - [ ] `run_id` is threaded to Phase 3 so AuditEvent EXT 7 matches
-- [ ] `DQARIngestFacet.sourceFeedId` matches the dataset's UC `dqar_source_feed_id` (consistency)
+- [ ] `CDARIngestFacet.sourceFeedId` matches the dataset's UC `dqar_source_feed_id` (consistency)
 
 See the reference doc `docs/OPENLINEAGE_EMISSION.md` for the full RunEvent lifecycle.

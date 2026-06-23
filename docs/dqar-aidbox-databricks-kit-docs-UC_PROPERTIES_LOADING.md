@@ -1,6 +1,6 @@
 # UC Properties Loading Reference
 
-**dqar-aidbox-databricks-kit documentation**  
+**cdar-aidbox-databricks-kit documentation**  
 Version: June 2026  
 Component: Databricks Unity Catalog load
 
@@ -12,8 +12,8 @@ There are two halves to the UC properties story, owned by two different repos:
 
 | Half | Owner | Doc |
 |---|---|---|
-| **Generate** the properties (from conformance results + manifest) | `dqar-client-kit` | client-kit `UC_PROPERTIES.md` |
-| **Load** the properties into Databricks Unity Catalog | `dqar-aidbox-databricks-kit` (this kit) | this doc |
+| **Generate** the properties (from conformance results + manifest) | `cdar-client-kit` | client-kit `UC_PROPERTIES.md` |
+| **Load** the properties into Databricks Unity Catalog | `cdar-aidbox-databricks-kit` (this kit) | this doc |
 
 This kit does **not** define the property schema or compute the values — it consumes the `uc-properties.json` (and/or `uc-properties.sql`) that client-kit produces and applies them to the live Unity Catalog. For the full key reference (`dqar_source_system_id`, `dqar_source_feed_id`, `dqar_source_type`, `dqar_ecds_ssor_category`, the `dqar_conformance_level_*` keys, the `dqar_findings_tier_*` counts, and the lineage keys), see the client-kit `UC_PROPERTIES.md`. This doc covers only application.
 
@@ -143,7 +143,7 @@ databricks sql --file uc-properties.sql
 ## Verification After Load
 
 ```sql
--- Confirm count of tables carrying DQAR properties for this assessment
+-- Confirm count of tables carrying CDAR properties for this assessment
 SELECT COUNT(*) FROM system.information_schema.tables
 WHERE tblproperties['dqar_organization_id'] = 'health-plan-123'
   AND tblproperties['dqar_measurement_period'] = 'MY2026';
@@ -158,7 +158,7 @@ WHERE table_name = 'observation'
   AND tblproperties['dqar_organization_id'] = 'health-plan-123';
 ```
 
-Confirm the `dqar_lineage_ol_run_id` here matches a RunEvent resolvable in OpenMetadata (see `OPENMETADATA_INTEGRATION.md`) and the `dqar_source_feed_id` matches the `DQARIngestFacet.sourceFeedId` for the same dataset. Drift between the table property and the lineage facet is itself a finding.
+Confirm the `dqar_lineage_ol_run_id` here matches a RunEvent resolvable in OpenMetadata (see `OPENMETADATA_INTEGRATION.md`) and the `dqar_source_feed_id` matches the `CDARIngestFacet.sourceFeedId` for the same dataset. Drift between the table property and the lineage facet is itself a finding.
 
 ---
 
@@ -176,6 +176,6 @@ Confirm the `dqar_lineage_ol_run_id` here matches a RunEvent resolvable in OpenM
 
 1. **Loading is the only job here.** Do not recompute or re-derive property values in this kit — if a value looks wrong, fix it in client-kit and regenerate. This kit applies; client-kit decides.
 2. **Refresh on re-assessment.** Each quarterly UC2 re-assessment produces fresh properties; re-run the loader to overwrite stale conformance/finding values. Last-write-wins makes this safe.
-3. **Keep table properties consistent with the lineage facet.** `dqar_source_feed_id`/`dqar_source_system_id` (UC) must equal `DQARIngestFacet.sourceFeedId`/`sourceSystemId` (OpenMetadata) for the same dataset.
+3. **Keep table properties consistent with the lineage facet.** `dqar_source_feed_id`/`dqar_source_system_id` (UC) must equal `CDARIngestFacet.sourceFeedId`/`sourceSystemId` (OpenMetadata) for the same dataset.
 4. **Prefer Terraform in production.** When property changes need approval, the IaC path gives a reviewable plan; the SDK loader is for automated pipelines.
 5. **Never widen the namespace.** The loader rejects non-`dqar_` keys by design — keep it that way so a malformed input can't write arbitrary table metadata.

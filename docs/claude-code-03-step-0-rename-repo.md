@@ -1,4 +1,4 @@
-# Step 0 — Rename Repo: `dqar-aidbox` → `dqar-aidbox-databricks-kit`
+# Step 0 — Rename Repo: `dqar-aidbox` → `cdar-aidbox-databricks-kit`
 
 > **Run this block FIRST, before any other work in this instruction file.**
 > It renames the repository folder and updates every reference in a single,
@@ -13,7 +13,7 @@ This block renames **two distinct things**. Confirm which scope applies:
 
 | Thing | Old | New | Default |
 |---|---|---|---|
-| Repo / folder name | `dqar-aidbox` | `dqar-aidbox-databricks-kit` | **Rename** |
+| Repo / folder name | `dqar-aidbox` | `cdar-aidbox-databricks-kit` | **Rename** |
 | Importable Python package | `dqar_aidbox` | `dqar_aidbox_databricks_kit` | **Keep short** (`dqar_aidbox`) unless told otherwise |
 
 **Default behavior:** rename the repo/folder to the long name, but keep the
@@ -55,8 +55,8 @@ From the **parent** directory of the repo:
 cd ..
 git -C dqar-aidbox mv -k . . 2>/dev/null || true   # no-op guard
 # Folder-level rename (history preserved at the VCS level via the move commit):
-mv dqar-aidbox dqar-aidbox-databricks-kit
-cd dqar-aidbox-databricks-kit
+mv dqar-aidbox cdar-aidbox-databricks-kit
+cd cdar-aidbox-databricks-kit
 ```
 
 > Note: a plain `mv` on the top-level folder is correct here because the folder
@@ -77,7 +77,7 @@ wc -l /tmp/rename-references.txt
 ```
 
 Read `/tmp/rename-references.txt` and classify each hit:
-- **Folder/repo-name references** (`dqar-aidbox`) → update to `dqar-aidbox-databricks-kit`
+- **Folder/repo-name references** (`dqar-aidbox`) → update to `cdar-aidbox-databricks-kit`
 - **Package-import references** (`dqar_aidbox`) → **leave unchanged** under the default scope above
 
 ---
@@ -89,7 +89,7 @@ Apply only to the hyphenated repo name. Do these explicitly; do not blanket-repl
 Files that almost always reference the repo name:
 
 ```
-pyproject.toml          # [project] name = "dqar-aidbox" → "dqar-aidbox-databricks-kit"
+pyproject.toml          # [project] name = "dqar-aidbox" → "cdar-aidbox-databricks-kit"
 README.md               # title, clone URL, badges, install snippet
 .github/workflows/*.yml # any path or cache key containing dqar-aidbox
 CHANGELOG.md            # header references
@@ -100,27 +100,27 @@ Targeted replace (review each diff before staging):
 
 ```bash
 # pyproject.toml — project name only
-sed -i 's/^name = "dqar-aidbox"/name = "dqar-aidbox-databricks-kit"/' pyproject.toml
+sed -i 's/^name = "dqar-aidbox"/name = "cdar-aidbox-databricks-kit"/' pyproject.toml
 
 # README + docs + workflows — repo-name string only (hyphenated form)
 grep -rIl --exclude-dir=.git 'dqar-aidbox' README.md docs .github 2>/dev/null \
-  | xargs -r sed -i 's/dqar-aidbox\b/dqar-aidbox-databricks-kit/g'
+  | xargs -r sed -i 's/dqar-aidbox\b/cdar-aidbox-databricks-kit/g'
 ```
 
 > The `\b` word boundary prevents double-renaming a string that already reads
-> `dqar-aidbox-databricks-kit`. Re-run the Step 0.2 grep after this to confirm no
+> `cdar-aidbox-databricks-kit`. Re-run the Step 0.2 grep after this to confirm no
 > stray `dqar-aidbox` (without the suffix) remains except intentional ones.
 
 ---
 
-## Step 0.4 — Update the `dqar-contracts` dependency pin (if present)
+## Step 0.4 — Update the `cdar-contracts` dependency pin (if present)
 
 The dependency on the shared contracts package does not change name, but confirm
 the pin is intact after the edits:
 
 ```bash
-grep -n 'dqar-contracts' pyproject.toml
-# expect: dqar-contracts>=1.0.0,<2.0.0  (unchanged)
+grep -n 'cdar-contracts' pyproject.toml
+# expect: cdar-contracts>=1.0.0,<2.0.0  (unchanged)
 ```
 
 ---
@@ -129,7 +129,7 @@ grep -n 'dqar-contracts' pyproject.toml
 
 The other repos may reference this one by its old folder name (CI matrices,
 integration-test paths, docs). Within this repo, fix any self-references; for the
-sibling repos (`dqar-client-kit`, `dqar-contracts`), record what needs updating so
+sibling repos (`cdar-client-kit`, `cdar-contracts`), record what needs updating so
 the user can run the corresponding instruction file there:
 
 ```bash
@@ -152,20 +152,20 @@ python -c "import dqar_aidbox; print('import OK')" 2>&1 || \
   echo "Import check skipped or failed — confirm package scope decision"
 
 # Project metadata reflects the new name
-grep '^name = ' pyproject.toml   # expect: dqar-aidbox-databricks-kit
+grep '^name = ' pyproject.toml   # expect: cdar-aidbox-databricks-kit
 
 # No stray old-name references remain
 test ! -s /tmp/rename-residual.txt && echo "No residual references ✓"
 
 # Stage and commit everything as ONE atomic rename commit
 git add -A
-git commit -m "chore: rename repo dqar-aidbox → dqar-aidbox-databricks-kit
+git commit -m "chore: rename repo dqar-aidbox → cdar-aidbox-databricks-kit
 
 - Folder renamed (history preserved)
 - Updated project name in pyproject.toml
 - Updated README, docs, and CI workflow references
 - Importable package name unchanged (dqar_aidbox)
-- dqar-contracts dependency pin unchanged"
+- cdar-contracts dependency pin unchanged"
 ```
 
 ---
@@ -176,7 +176,7 @@ Output a short summary and then continue to the rest of this instruction file:
 
 ```
 RENAME COMPLETE
-  Folder:    dqar-aidbox → dqar-aidbox-databricks-kit
+  Folder:    dqar-aidbox → cdar-aidbox-databricks-kit
   Package:   dqar_aidbox (unchanged)
   Files touched: <N>
   Residual cross-repo references to fix elsewhere: <list or "none">

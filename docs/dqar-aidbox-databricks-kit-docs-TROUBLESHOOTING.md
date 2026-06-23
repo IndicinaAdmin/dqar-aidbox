@@ -1,6 +1,6 @@
-# dqar-aidbox-databricks-kit Troubleshooting
+# cdar-aidbox-databricks-kit Troubleshooting
 
-**dqar-aidbox-databricks-kit documentation**  
+**cdar-aidbox-databricks-kit documentation**  
 Version: June 2026
 
 ---
@@ -53,7 +53,7 @@ Version: June 2026
 - Confirm `complete_run()` includes both the input dataset(s) and the output dataset(s).
 - A run with an empty `outputs` array produces no lineage edge — populate it.
 
-### `DQARIngestFacet` missing field mappings
+### `CDARIngestFacet` missing field mappings
 
 **Cause:** the facet was attached without `fieldMappings`, or mappings lack `translationTableVersion`.
 
@@ -113,7 +113,7 @@ Version: June 2026
 **Fix:**
 - Re-run the client-kit assessment, then re-run the loader with the fresh JSON. `SET TBLPROPERTIES` is last-write-wins, so the new values overwrite cleanly.
 
-### `dqar_source_feed_id` (UC) ≠ `DQARIngestFacet.sourceFeedId` (OpenMetadata)
+### `dqar_source_feed_id` (UC) ≠ `CDARIngestFacet.sourceFeedId` (OpenMetadata)
 
 **Cause:** the table property and the lineage facet drifted — different feed attribution for the same dataset.
 
@@ -142,7 +142,7 @@ Confirm the warehouse ID used for statement execution is running and the token h
 **Cause:** the package directory or importable name was not updated when the repo was renamed.
 
 **Fix:**
-- The importable package is `dqar_aidbox_databricks_kit`. Ensure the package directory is named accordingly and that `pyproject.toml` reflects the new distribution name `dqar-aidbox-databricks-kit`.
+- The importable package is `dqar_aidbox_databricks_kit`. Ensure the package directory is named accordingly and that `pyproject.toml` reflects the new distribution name `cdar-aidbox-databricks-kit`.
 
 ### Stray `dqar-aidbox` references remain
 
@@ -156,6 +156,6 @@ Update or justify each remaining hit; references in sibling repos are handled by
 
 ## Getting Help
 
-- **GitHub Issues:** https://github.com/Indicina/dqar-aidbox-databricks-kit/issues
+- **GitHub Issues:** https://github.com/Indicina/cdar-aidbox-databricks-kit/issues
 - **Aidbox / Health Samurai:** https://connect.health-samurai.io/ (Zulip)
-- Enable verbose logging: `dqar-aidbox-databricks-kit --verbose <command>`
+- Enable verbose logging: `cdar-aidbox-databricks-kit --verbose <command>`

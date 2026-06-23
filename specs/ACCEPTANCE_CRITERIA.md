@@ -1,16 +1,16 @@
 # Acceptance Criteria
 
-> Scope: `dqar-aidbox-databricks-kit`. These criteria gate the ingest-time kit:
+> Scope: `cdar-aidbox-databricks-kit`. These criteria gate the ingest-time kit:
 > UC property loading, OpenLineage emission, AuditEvent provenance, cross-kit
 > consistency, and orchestration. (Conformance / manifest / 5-level criteria
-> belong to `dqar-client-kit`, not here.)
+> belong to `cdar-client-kit`, not here.)
 
 ## Build & Package
 - [ ] `pyproject.toml` valid and installable
-- [ ] `pip install .` succeeds and resolves `dqar-contracts>=1.0.0,<2.0.0`
+- [ ] `pip install .` succeeds and resolves `cdar-contracts>=1.0.0,<2.0.0`
 - [ ] `aidbox-dqar --version` works
 - [ ] `aidbox-dqar ingest --help` shows the ingest options
-- [ ] Shared types imported from `dqar_contracts.shared` (no local redefinition)
+- [ ] Shared types imported from `cdar_contracts.shared` (no local redefinition)
 
 ## Phase 1 — UC Properties Loading
 - [ ] Parses client-kit `uc-properties.json`
@@ -23,7 +23,7 @@
 ## Phase 2 — OpenLineage Emission
 - [ ] START / COMPLETE share one `run_id` per batch
 - [ ] COMPLETE declares both inputs and outputs (no orphaned runs)
-- [ ] `DQARIngestFacet` present with **versioned** `fieldMappings` (sourceSegment, targetPath, translationTableVersion)
+- [ ] `CDARIngestFacet` present with **versioned** `fieldMappings` (sourceSegment, targetPath, translationTableVersion)
 - [ ] FAIL emitted on error; no dangling START
 - [ ] RunEvents POST to **OpenMetadata** (Marquez absent from the dependency tree and the code path)
 
@@ -36,7 +36,7 @@
 ## Phase 4 — Integration with client-kit
 - [ ] `ConsistencyValidator` checks all three identity linkages
 - [ ] Linkage 1 (run identity: EXT 7 == RunEvent.runId == UC `dqar_lineage_ol_run_id`) mismatch → Tier 1 finding
-- [ ] Linkage 2 (feed: UC `dqar_source_feed_id` == `DQARIngestFacet.sourceFeedId`) mismatch → Tier 2 finding
+- [ ] Linkage 2 (feed: UC `dqar_source_feed_id` == `CDARIngestFacet.sourceFeedId`) mismatch → Tier 2 finding
 - [ ] Linkage 3 (resource missing EXT 7) → Tier 2 finding
 - [ ] Validator returns findings; does not raise
 
